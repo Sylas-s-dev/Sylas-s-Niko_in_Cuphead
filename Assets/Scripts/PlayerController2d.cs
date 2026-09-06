@@ -67,10 +67,13 @@ public class PlayerController2D : MonoBehaviour
         {
             float move = Input.GetAxisRaw("Horizontal");
             rb.linearVelocity = new Vector2(move * speed, rb.linearVelocity.y);
-            if (move != 0) transform.localScale = new Vector3(Mathf.Sign(move), 1, 1);
+            if (move != 0 && spriteRenderer != null)
+            {
+                spriteRenderer.flipX = move < 0;
+            }
         }
 
-        // Visée 8 directions Cuphead
+        // Visée 8 directions Cuphead - FIX (sans localScale)
         if (firePoint != null && cam != null)
         {
             Vector3 mouseWorld = cam.ScreenToWorldPoint(Input.mousePosition);
@@ -79,11 +82,6 @@ public class PlayerController2D : MonoBehaviour
             float rawAngle = Mathf.Atan2(rawDir.y, rawDir.x) * Mathf.Rad2Deg;
             float snappedAngle = Mathf.Round(rawAngle / 45f) * 45f;
             firePoint.rotation = Quaternion.Euler(0, 0, snappedAngle);
-
-            if (Mathf.Abs(snappedAngle) > 90f)
-                transform.localScale = new Vector3(-1, 1, 1);
-            else
-                transform.localScale = new Vector3(1, 1, 1);
         }
 
         if ((Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow) || Input.GetAxisRaw("Vertical") < -0.5f)
@@ -135,7 +133,7 @@ public class PlayerController2D : MonoBehaviour
         else if (rb.linearVelocity.y > 0 && !Input.GetButton("Jump")) rb.linearVelocity += Vector2.up * Physics2D.gravity.y * (lowJumpMultiplier - 1) * Time.deltaTime;
     }
 
-    IEnumerator Dash()
+        IEnumerator Dash()
     {
         canDash = false;
         isDashing = true;

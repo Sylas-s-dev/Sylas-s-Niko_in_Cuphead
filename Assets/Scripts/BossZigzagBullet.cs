@@ -35,9 +35,9 @@ public class BossZigzagBullet : MonoBehaviour
     {
         // Si tu veux qu'elles rebondissent un peu sur les plateformes au lieu de passer à travers
         // décommente ça
-         if (other.CompareTag("Ground")) {
-             amplitude = -amplitude;
-         }
+         //if (other.CompareTag("Ground")) {
+             //amplitude = -amplitude;
+         //}
 
         if (other.CompareTag("Player"))
         {

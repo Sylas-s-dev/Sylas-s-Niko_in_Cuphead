@@ -13,7 +13,6 @@ public class Bullet : MonoBehaviour
 
     void Start()
     {
-        // C'est le FirePoint qui donne la direction maintenant (souris)
         rb.linearVelocity = transform.right * bulletSpeed;
         Destroy(gameObject, lifeTime);
     }
@@ -22,13 +21,21 @@ public class Bullet : MonoBehaviour
     {
         if (other.CompareTag("BossBullet")) return;
         if (other.CompareTag("Player")) return;
+        if (other.CompareTag("Bullet")) return;
+
+        // --- FIX : on traverse les plateformes bleues ---
+        // Même si tag = Ground, si c'est le layer Platform ou si ça a un PlatformEffector, on ignore
+        if (other.gameObject.layer == LayerMask.NameToLayer("Platform")) return;
+        if (other.gameObject.layer == LayerMask.NameToLayer("Ignore platform")) return;
+        if (other.GetComponent<PlatformEffector2D>() != null) return;
+        if (other.GetComponentInParent<PlatformEffector2D>() != null) return;
 
         if (other.CompareTag("Boss"))
         {
             other.GetComponent<Boss>()?.TakeDamage(1);
         }
 
-        // Mur, sol, boss = on détruit
+        // Ici on ne détruit que pour vrai mur / sol / boss
         Destroy(gameObject);
     }
 }
