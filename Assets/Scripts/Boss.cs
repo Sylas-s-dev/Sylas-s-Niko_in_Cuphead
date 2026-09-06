@@ -8,14 +8,28 @@ public class Boss : MonoBehaviour
     [Header("Vie Phase 3")] public int maxHealthPhase3 = 30; private int currentHealthPhase3; public bool secondBarActive = false;
     [Header("UI")] public Slider healthBar; public Slider healthBarPhase3; public GameObject healthBarPhase3_GO;
     [Header("Tir P1/P2")] public GameObject bossBulletPrefab; public Transform[] firePoints; public float fireRate = 0.6f; private int currentPoint = 0;
+    [Header("Tir P2 - Equilibrage Continu")]   
+    public float p2Lifetime = 15f;
     [Header("Tir P3")] public Transform[] bulletSpawnsLeft; public Transform[] bulletSpawnsRight; public Transform boulderSpawnLeft; public Transform boulderSpawnRight; public float sideBulletSpeed = 4f; public float sideFireRate = 0.9f; public float boulderSpeed = 5f;
     [Header("Tir P3 - Prefab propre")] public GameObject p3BulletPrefab;
-    [Header("Tir P3 - Equilibrage")] public float p3BulletSpeed = 2.5f; public float p3FireRate = 1.4f;
+    [Header("Tir P2 - Equilibrage Continu")] public float p2BulletSpeed = 2f; public float p2FireRate = 1.0f;
+    [Header("Tir P3 - Equilibrage")]
+    public float p3BulletSpeed = 2.5f;
+    public float p3FireRate = 1.4f;
+    public float p3Lifetime = 10f;
     [Header("Laser")] public GameObject warningFlash; public GameObject laserBeam; public float warningTime = 0.8f; public float laserDuration = 1.5f; public float laserFollowDuration = 1.2f; public Transform player;
     [Header("Boulders P1/P2")] public GameObject boulderPrefab; public Transform boulderSpawnPoint; public float delayBetweenBouldersMin = 0.35f; public float delayBetweenBouldersMax = 0.75f;
     [Header("Phase 3 - Transition")] public Transform centerPosition; public float moveToCenterSpeed = 3f; public Collider2D bossContactCollider; public float phase3Pause = 4f; public Animator animator;
     [Header("Mur P3")] public float wallBulletScale = 2.5f; public float wallSpeed = 1.2f; public float wallLifetime = 15f;
     private bool specialIsActive = false; private bool isInvulnerable = false; private bool phase3Paused = false;
+    [Header("P3 - Arena Aérienne")]
+    public GameObject groundToCollapse; // ton sol bleu
+    public GameObject platformPurplePrefab; // la plateforme violette sous le boss
+    public GameObject[] aerialPlatforms; // mets tes 3 plateformes bleues ici
+    public GameObject warningGroundPrefab; // le panneau!
+    public Transform[] warningSpawnPoints; // 5-6 points le long du sol
+    public float warningDuration = 2.5f;
+    public float groundCollapseSpeed = 5f;
 
     void Start()
     {
@@ -42,15 +56,53 @@ public class Boss : MonoBehaviour
 
             if (!secondBarActive)
             {
-                if (!specialIsActive)
+                // P1 : ALEATOIRE SANS REPETITION
+                if (phase == 1)
                 {
-                    if (firePoints.Length > 0) Instantiate(bossBulletPrefab, firePoints[currentPoint].position, Quaternion.identity);
-                    currentPoint = (currentPoint + 1) % Mathf.Max(1, firePoints.Length);
-                    yield return new WaitForSeconds(fireRate);
+                    if (!specialIsActive && firePoints.Length > 0)
+                    {
+                        int randomIndex;
+                        do { randomIndex = Random.Range(0, firePoints.Length); }
+                        while (firePoints.Length > 1 && randomIndex == currentPoint);
+
+                        currentPoint = randomIndex;
+                        Instantiate(bossBulletPrefab, firePoints[currentPoint].position, Quaternion.identity);
+                        yield return new WaitForSeconds(fireRate);
+                    }
+                    else yield return null;
                 }
-                else yield return null;
+                // P2 : CONTINU COMME P3 MAIS PLUS LENT
+                else
+                {
+                    bool isLeftSpawn = Random.value > 0.5f;
+                    Transform[] pool = isLeftSpawn ? bulletSpawnsLeft : bulletSpawnsRight;
+                    if (pool != null && pool.Length > 0)
+                    {
+                        Transform spawn = pool[Random.Range(0, pool.Length)];
+                        if (spawn != null)
+                        {
+                            GameObject prefabToUse = p3BulletPrefab != null ? p3BulletPrefab : bossBulletPrefab;
+                            GameObject b = Instantiate(prefabToUse, spawn.position, Quaternion.identity);
+                            if (prefabToUse == bossBulletPrefab)
+                            {
+                                foreach (var c in b.GetComponentsInChildren<MonoBehaviour>(true))
+                                {
+                                    string n = c.GetType().Name.ToLower();
+                                    if (n.Contains("zigzag")) continue;
+                                    if (n.Contains("boulder") || n.Contains("bullet")) Destroy(c);
+                                }
+                                foreach (var col in b.GetComponentsInChildren<Collider2D>(true)) { col.enabled = true; col.isTrigger = true; }
+                                if (b.GetComponent<SimpleDamage>() == null) b.AddComponent<SimpleDamage>();
+                            }
+                            Vector2 dir = isLeftSpawn ? Vector2.right : Vector2.left;
+                            StartCoroutine(ForceVelocityPermanent(b, dir * Mathf.Abs(p2BulletSpeed)));
+                            Destroy(b, 15f);
+                        }
+                    }
+                    yield return new WaitForSeconds(p2FireRate + Random.Range(0.1f, 0.3f));
+                }
             }
-            else
+            else // P3 : CONTINU RAPIDE
             {
                 bool isLeftSpawn = Random.value > 0.5f;
                 Transform[] pool = isLeftSpawn ? bulletSpawnsLeft : bulletSpawnsRight;
@@ -60,11 +112,9 @@ public class Boss : MonoBehaviour
                     Transform spawn = pool[Random.Range(0, pool.Length)];
                     if (spawn != null)
                     {
-                        // On utilise la prefab propre si elle existe
                         GameObject prefabToUse = p3BulletPrefab != null ? p3BulletPrefab : bossBulletPrefab;
                         GameObject b = Instantiate(prefabToUse, spawn.position, Quaternion.identity);
 
-                        // Si c'est l'ancienne prefab qui a encore le script Bullet, on le nettoie
                         if (prefabToUse == bossBulletPrefab)
                         {
                             foreach (var c in b.GetComponentsInChildren<MonoBehaviour>(true))
@@ -79,7 +129,7 @@ public class Boss : MonoBehaviour
 
                         Vector2 dir = isLeftSpawn ? Vector2.right : Vector2.left;
                         StartCoroutine(ForceVelocityPermanent(b, dir * Mathf.Abs(p3BulletSpeed)));
-                        Destroy(b, 7f);
+                        Destroy(b, 15f);
                     }
                 }
                 yield return new WaitForSeconds(p3FireRate + Random.Range(0.1f, 0.4f));
@@ -93,10 +143,13 @@ public class Boss : MonoBehaviour
         {
             if (phase3Paused) { yield return null; continue; }
 
-            // P1 = pas de capacités spéciales
+            // P1 = on met les boulders pour leur screentime
             if (phase == 1)
             {
-                yield return null;
+                yield return new WaitForSeconds(Random.Range(5f, 7f));
+                if (secondBarActive) break;
+                if (specialIsActive) continue;
+                yield return StartCoroutine(BouncingBoulderAttack(2)); // 2 petits pour le lore
                 continue;
             }
 
@@ -118,10 +171,9 @@ public class Boss : MonoBehaviour
         {
             if (phase3Paused) { yield return null; continue; }
             yield return new WaitForSeconds(Random.Range(4f, 6f));
-            int r = Random.Range(0, 3);
+            int r = Random.Range(0, 2); // plus que 2 patterns
             if (r == 0) yield return StartCoroutine(SideBulletBurstAttack());
-            else if (r == 1) yield return StartCoroutine(LaserFollowPlayerAttack());
-            else yield return StartCoroutine(SideBoulderAttack());
+            else if (r == 1) yield return StartCoroutine(LaserFollowPlayerAttack());         
         }
     }
 
@@ -169,7 +221,6 @@ public class Boss : MonoBehaviour
             {
                 rb.gravityScale = 0;
                 rb.bodyType = RigidbodyType2D.Dynamic;
-                // On force le X, on laisse le Y au zigzag
                 rb.linearVelocity = new Vector2(vel.x, rb.linearVelocity.y);
             }
             yield return new WaitForFixedUpdate();
@@ -177,6 +228,85 @@ public class Boss : MonoBehaviour
     }
 
     public void TakeDamage(int dmg) { if (isInvulnerable) return; if (!secondBarActive) { currentHealth -= dmg; if (healthBar != null) healthBar.value = currentHealth; if (currentHealth <= maxHealth / 2 && phase == 1) { phase = 2; fireRate = 0.4f; GetComponent<SpriteRenderer>().color = Color.red; } if (currentHealth <= 0) StartCoroutine(EnterPhase3()); } else { currentHealthPhase3 -= dmg; if (healthBarPhase3 != null) healthBarPhase3.value = currentHealthPhase3; if (currentHealthPhase3 <= 0) Die(); } }
-    IEnumerator EnterPhase3() { secondBarActive = true; isInvulnerable = true; phase3Paused = true; specialIsActive = true; phase = 3; Vector3 targetPos = centerPosition != null ? centerPosition.position : transform.position; if (healthBar != null) healthBar.gameObject.SetActive(false); if (healthBarPhase3_GO != null) healthBarPhase3_GO.SetActive(true); currentHealthPhase3 = maxHealthPhase3; if (healthBarPhase3 != null) { healthBarPhase3.maxValue = maxHealthPhase3; healthBarPhase3.value = currentHealthPhase3; } Rigidbody2D rbBoss = GetComponent<Rigidbody2D>(); if (rbBoss != null) rbBoss.linearVelocity = Vector2.zero; while (Vector2.Distance(transform.position, targetPos) > 0.1f) { transform.position = Vector2.MoveTowards(transform.position, targetPos, moveToCenterSpeed * Time.deltaTime); yield return null; } transform.position = targetPos; if (bossContactCollider != null) bossContactCollider.enabled = false; if (animator != null) animator.SetTrigger("Enrage"); yield return new WaitForSeconds(phase3Pause); isInvulnerable = false; phase3Paused = false; specialIsActive = false; }
+    IEnumerator EnterPhase3()
+    {
+        secondBarActive = true;
+        isInvulnerable = true;
+        phase3Paused = true;
+        specialIsActive = true;
+        phase = 3;
+
+        // --- 1. Spawn plateforme violette sous le boss ---
+        if (platformPurplePrefab != null && centerPosition != null)
+        {
+            Vector3 pos = centerPosition.position;
+            pos.y -= 1.2f; // juste sous lui
+            Instantiate(platformPurplePrefab, pos, Quaternion.identity);
+        }
+
+        // --- 2. Warning au sol qui clignote ---
+        GameObject[] warnings = new GameObject[0];
+        if (warningGroundPrefab != null && warningSpawnPoints.Length > 0)
+        {
+            warnings = new GameObject[warningSpawnPoints.Length];
+            for (int i = 0; i < warningSpawnPoints.Length; i++)
+                // après -> on le fait pop 0.8 au dessus du sol
+                warnings[i] = Instantiate(warningGroundPrefab, warningSpawnPoints[i].position + Vector3.up * 0.8f, Quaternion.identity);
+
+            // clignotement
+            float t = 0;
+            while (t < warningDuration)
+            {
+                foreach (var w in warnings) if (w != null) w.SetActive(!w.activeSelf);
+                t += 0.15f;
+                yield return new WaitForSeconds(0.15f);
+            }
+            foreach (var w in warnings) if (w != null) Destroy(w);
+        }
+
+        // --- 3. Effondrement du sol ---
+        if (groundToCollapse != null)
+        {
+            var col = groundToCollapse.GetComponent<Collider2D>();
+            if (col) col.enabled = false;
+            // petite anim de chute
+            float fall = 0;
+            Vector3 startPos = groundToCollapse.transform.position;
+            while (fall < 2f)
+            {
+                groundToCollapse.transform.position += Vector3.down * groundCollapseSpeed * Time.deltaTime;
+                fall += Time.deltaTime;
+                yield return null;
+            }
+            groundToCollapse.SetActive(false);
+        }
+
+        // --- 4. Activation des 3 plateformes aériennes ---
+        foreach (var plat in aerialPlatforms) if (plat != null) plat.SetActive(true);
+
+        // --- 5. Suite de ton ancienne transition ---
+        if (healthBar != null) healthBar.gameObject.SetActive(false);
+        if (healthBarPhase3_GO != null) healthBarPhase3_GO.SetActive(true);
+        currentHealthPhase3 = maxHealthPhase3;
+        if (healthBarPhase3 != null) { healthBarPhase3.maxValue = maxHealthPhase3; healthBarPhase3.value = currentHealthPhase3; }
+
+        Vector3 targetPos = centerPosition != null ? centerPosition.position : transform.position;
+        Rigidbody2D rbBoss = GetComponent<Rigidbody2D>();
+        if (rbBoss != null) rbBoss.linearVelocity = Vector2.zero;
+        while (Vector2.Distance(transform.position, targetPos) > 0.1f)
+        {
+            transform.position = Vector2.MoveTowards(transform.position, targetPos, moveToCenterSpeed * Time.deltaTime);
+            yield return null;
+        }
+        transform.position = targetPos;
+
+        if (bossContactCollider != null) bossContactCollider.enabled = false;
+        if (animator != null) animator.SetTrigger("Enrage");
+        yield return new WaitForSeconds(phase3Pause);
+
+        isInvulnerable = false;
+        phase3Paused = false;
+        specialIsActive = false;
+    }
     void Die() { StopAllCoroutines(); Destroy(gameObject); }
 }

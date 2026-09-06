@@ -134,7 +134,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossBouncingProjectile
   horizontalSpeed: 5
-  bounceForce: 7
+  minBounce: 4
+  maxBounce: 9
+  damage: 1
   dir: -1
 --- !u!61 &-3272999303240737809
 BoxCollider2D:
