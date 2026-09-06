@@ -4,6 +4,7 @@ public class BossBullet : MonoBehaviour
 {
     public float speed = 7f;
     private bool isP3 = false;
+    public bool isWallBullet = false; // coché par le boss pour le mur
 
     void Awake()
     {
@@ -38,9 +39,14 @@ public class BossBullet : MonoBehaviour
         if (col.CompareTag("Player"))
         {
             var player = col.GetComponent<PlayerController2D>();
-            if (player != null && player.IsInvincible) return;
-            player.TakeDamage(1);
-            Destroy(gameObject);
+            if (player != null)
+            {
+                player.TakeDamage(1);
+            }
+
+            // Le mur ne se casse pas, les petites balles oui
+            if (!isWallBullet)
+                Destroy(gameObject);
         }
     }
 }

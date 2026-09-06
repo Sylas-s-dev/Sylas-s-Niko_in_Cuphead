@@ -212,7 +212,7 @@ GameObject:
   - component: {fileID: 252761435}
   - component: {fileID: 252761434}
   - component: {fileID: 252761437}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Boss
   m_TagString: Boss
   m_Icon: {fileID: 0}
@@ -408,14 +408,17 @@ MonoBehaviour:
   boulderSpawnLeft: {fileID: 826186577}
   boulderSpawnRight: {fileID: 864626077}
   sideBulletSpeed: 4
-  sideFireRate: 0.9
-  boulderSpeed: 5
+  sideFireRate: 2
+  boulderSpeed: 3
+  p3BulletPrefab: {fileID: 4453465053408138200, guid: 7e791ee1cabe55e4eab043e8ce8cc2ec, type: 3}
+  p3BulletSpeed: 2.5
+  p3FireRate: 1.4
   warningFlash: {fileID: 538961123}
   laserBeam: {fileID: 1086634688}
   warningTime: 0.8
   laserDuration: 1.5
   laserFollowDuration: 1.2
-  player: {fileID: 0}
+  player: {fileID: 1111202086}
   boulderPrefab: {fileID: 7204493909325825053, guid: 6f94c619f52202441bc44406ad1dfde2, type: 3}
   boulderSpawnPoint: {fileID: 595812047}
   delayBetweenBouldersMin: 2
@@ -425,6 +428,9 @@ MonoBehaviour:
   bossContactCollider: {fileID: 252761437}
   phase3Pause: 4
   animator: {fileID: 0}
+  wallBulletScale: 2.5
+  wallSpeed: 4
+  wallLifetime: 10
 --- !u!61 &252761437
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -556,7 +562,7 @@ GameObject:
   m_Component:
   - component: {fileID: 368214483}
   - component: {fileID: 368214484}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Square (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -906,7 +912,7 @@ GameObject:
   m_Component:
   - component: {fileID: 538961125}
   - component: {fileID: 538961124}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: WarningFlash
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -996,7 +1002,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 595812047}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: ThrowPoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1217,7 +1223,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 683012280}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Firepoint2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1253,7 +1259,7 @@ GameObject:
   - component: {fileID: 689809853}
   m_Layer: 8
   m_Name: plateform
-  m_TagString: Ground
+  m_TagString: Platform
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1407,7 +1413,7 @@ GameObject:
   m_Component:
   - component: {fileID: 782617469}
   - component: {fileID: 782617470}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Visual
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1624,7 +1630,7 @@ GameObject:
   - component: {fileID: 833149420}
   m_Layer: 8
   m_Name: plateform 2
-  m_TagString: Ground
+  m_TagString: Platform
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1878,7 +1884,7 @@ GameObject:
   - component: {fileID: 1086634690}
   - component: {fileID: 1086634691}
   - component: {fileID: 1086634692}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: LaserBeam
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1997,7 +2003,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1097073290}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Firepoint1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2345,7 +2351,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1202700512}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: LaserBeamFirepoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2376,7 +2382,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1275082893}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Firepoint3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2542,7 +2548,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1499986815}
   - component: {fileID: 1499986816}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Square
   m_TagString: Untagged
   m_Icon: {fileID: 0}
