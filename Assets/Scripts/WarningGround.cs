@@ -25,7 +25,7 @@ public class WarningGround : MonoBehaviour
             // if (tickSound) AudioSource.PlayClipAtPoint(tickSound, transform.position);
 
             // accélère à la fin
-            float wait = (t > lifetime * 0.7f) ? blinkSpeed * 0.5f : blinkSpeed;
+            float wait = (t > lifetime * 0.7f) ? blinkSpeed * 0.8f : blinkSpeed;
             t += wait;
             yield return new WaitForSeconds(wait);
         }

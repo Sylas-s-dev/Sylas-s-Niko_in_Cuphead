@@ -30,6 +30,11 @@ public class Boss : MonoBehaviour
     public Transform[] warningSpawnPoints; // 5-6 points le long du sol
     public float warningDuration = 2.5f;
     public float groundCollapseSpeed = 5f;
+    [Header("P3 - Nouveau Pattern Homing Orb")]
+    public GameObject homingOrbPrefab;
+    public Transform homingOrbSpawnPoint; // mets un empty en haut au centre
+    public float homingOrbSpeed = 2.2f;
+    public float homingOrbLifetime = 5f;
 
     void Start()
     {
@@ -171,10 +176,38 @@ public class Boss : MonoBehaviour
         {
             if (phase3Paused) { yield return null; continue; }
             yield return new WaitForSeconds(Random.Range(4f, 6f));
-            int r = Random.Range(0, 2); // plus que 2 patterns
+            int r = Random.Range(0, 3); // on passe à 3 patterns
             if (r == 0) yield return StartCoroutine(SideBulletBurstAttack());
-            else if (r == 1) yield return StartCoroutine(LaserFollowPlayerAttack());         
+            else if (r == 1) yield return StartCoroutine(LaserFollowPlayerAttack());
+            else yield return StartCoroutine(HomingOrbAttack());
         }
+    }
+
+    IEnumerator HomingOrbAttack()
+    {
+        specialIsActive = true;
+        // petit warning en haut
+        if (warningFlash != null && homingOrbSpawnPoint != null)
+        {
+            warningFlash.transform.position = homingOrbSpawnPoint.position;
+            warningFlash.SetActive(true);
+            yield return new WaitForSeconds(0.6f);
+            warningFlash.SetActive(false);
+        }
+
+        if (homingOrbPrefab != null && homingOrbSpawnPoint != null)
+        {
+            GameObject orb = Instantiate(homingOrbPrefab, homingOrbSpawnPoint.position, Quaternion.identity);
+            var script = orb.GetComponent<HomingOrb>();
+            if (script != null)
+            {
+                script.speed = homingOrbSpeed;
+                script.lifetime = homingOrbLifetime;
+            }
+        }
+
+        yield return new WaitForSeconds(1f);
+        specialIsActive = false;
     }
 
     IEnumerator HorizontalLaserAttack() { specialIsActive = true; if (warningFlash != null) warningFlash.SetActive(true); for (int i = 0; i < 4; i++) { if (warningFlash != null) warningFlash.SetActive(false); yield return new WaitForSeconds(0.1f); if (warningFlash != null) warningFlash.SetActive(true); yield return new WaitForSeconds(0.1f); } yield return new WaitForSeconds(warningTime); if (warningFlash != null) warningFlash.SetActive(false); if (laserBeam != null) laserBeam.SetActive(true); yield return new WaitForSeconds(laserDuration); if (laserBeam != null) laserBeam.SetActive(false); specialIsActive = false; }
@@ -230,30 +263,50 @@ public class Boss : MonoBehaviour
     public void TakeDamage(int dmg) { if (isInvulnerable) return; if (!secondBarActive) { currentHealth -= dmg; if (healthBar != null) healthBar.value = currentHealth; if (currentHealth <= maxHealth / 2 && phase == 1) { phase = 2; fireRate = 0.4f; GetComponent<SpriteRenderer>().color = Color.red; } if (currentHealth <= 0) StartCoroutine(EnterPhase3()); } else { currentHealthPhase3 -= dmg; if (healthBarPhase3 != null) healthBarPhase3.value = currentHealthPhase3; if (currentHealthPhase3 <= 0) Die(); } }
     IEnumerator EnterPhase3()
     {
-        secondBarActive = true;
+        // --- 0. BLOCAGE TOTAL DES SPAWNS ---
+        secondBarActive = true; // ça coupe SpecialLoopP1P2
         isInvulnerable = true;
-        phase3Paused = true;
+        phase3Paused = true; // ça coupe BulletLoop
         specialIsActive = true;
         phase = 3;
 
-        // --- 1. Spawn plateforme violette sous le boss ---
+        // --- 1. PURGE DE L'ECRAN ---
+        foreach (var d in FindObjectsOfType<SimpleDamage>()) Destroy(d.gameObject);
+        foreach (var b in FindObjectsOfType<Boulder>()) Destroy(b.gameObject);
+        foreach (var o in FindObjectsOfType<HomingOrb>()) Destroy(o.gameObject);
+
+        // --- 2. FLASH + FREEZE (effet impact) ---
+        var sr = GetComponent<SpriteRenderer>();
+        if (sr != null)
+        {
+            Color baseColor = sr.color;
+            sr.color = Color.white;
+            Time.timeScale = 0f; // freeze total
+            yield return new WaitForSecondsRealtime(0.15f);
+            Time.timeScale = 1f;
+            sr.color = baseColor;
+        }
+        else
+        {
+            yield return new WaitForSeconds(0.15f);
+        }
+
+        // --- 3. Spawn plateforme violette sous le boss ---
         if (platformPurplePrefab != null && centerPosition != null)
         {
             Vector3 pos = centerPosition.position;
-            pos.y -= 1.2f; // juste sous lui
+            pos.y -= 1.2f;
             Instantiate(platformPurplePrefab, pos, Quaternion.identity);
         }
 
-        // --- 2. Warning au sol qui clignote ---
+        // --- 4. Warning au sol qui clignote ---
         GameObject[] warnings = new GameObject[0];
         if (warningGroundPrefab != null && warningSpawnPoints.Length > 0)
         {
             warnings = new GameObject[warningSpawnPoints.Length];
             for (int i = 0; i < warningSpawnPoints.Length; i++)
-                // après -> on le fait pop 0.8 au dessus du sol
                 warnings[i] = Instantiate(warningGroundPrefab, warningSpawnPoints[i].position + Vector3.up * 0.8f, Quaternion.identity);
 
-            // clignotement
             float t = 0;
             while (t < warningDuration)
             {
@@ -264,14 +317,12 @@ public class Boss : MonoBehaviour
             foreach (var w in warnings) if (w != null) Destroy(w);
         }
 
-        // --- 3. Effondrement du sol ---
+        // --- 5. Effondrement du sol ---
         if (groundToCollapse != null)
         {
             var col = groundToCollapse.GetComponent<Collider2D>();
             if (col) col.enabled = false;
-            // petite anim de chute
             float fall = 0;
-            Vector3 startPos = groundToCollapse.transform.position;
             while (fall < 2f)
             {
                 groundToCollapse.transform.position += Vector3.down * groundCollapseSpeed * Time.deltaTime;
@@ -281,10 +332,10 @@ public class Boss : MonoBehaviour
             groundToCollapse.SetActive(false);
         }
 
-        // --- 4. Activation des 3 plateformes aériennes ---
+        // --- 6. Activation des 3 plateformes aériennes ---
         foreach (var plat in aerialPlatforms) if (plat != null) plat.SetActive(true);
 
-        // --- 5. Suite de ton ancienne transition ---
+        // --- 7. Suite transition ---
         if (healthBar != null) healthBar.gameObject.SetActive(false);
         if (healthBarPhase3_GO != null) healthBarPhase3_GO.SetActive(true);
         currentHealthPhase3 = maxHealthPhase3;
