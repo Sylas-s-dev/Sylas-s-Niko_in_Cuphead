@@ -12,6 +12,13 @@ public class PlayerController2D : MonoBehaviour
     private Coroutine invincibilityCoroutine;
     private bool isHitInvincible = false;
 
+    [Header("Freeze Debuff - P3")]
+    private bool isSlowed = false;
+    private float slowMultiplier = 1f;
+    private Coroutine slowCoroutine;
+    private Color baseColor = Color.white;
+    private float originalGravityScale;
+
     [Header("Dash")]
     public float dashSpeed = 18f;
     public float dashDuration = 0.2f;
@@ -37,7 +44,7 @@ public class PlayerController2D : MonoBehaviour
     public GameObject bulletPrefab;
     public Transform firePoint;
     public float fireRate = 0.2f;
-    public int bulletCount = 1; // 1 = normal, 3 = triple, 5 = shotgun
+    public int bulletCount = 1;
     public float spreadAngle = 15f;
 
     private Rigidbody2D rb;
@@ -51,10 +58,13 @@ public class PlayerController2D : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        originalGravityScale = rb.gravityScale;
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        if (spriteRenderer != null) baseColor = spriteRenderer.color;
         cam = Camera.main;
         originalExcludeLayers = rb.excludeLayers;
         currentHealth = maxHealth;
+        slowMultiplier = 1f;
         if (healthBarFill == null && healthBar != null && healthBar.fillRect != null)
             healthBarFill = healthBar.fillRect.GetComponent<Image>();
         if (healthBar != null) { healthBar.maxValue = maxHealth; healthBar.value = currentHealth; }
@@ -66,14 +76,13 @@ public class PlayerController2D : MonoBehaviour
         if (!isDashing)
         {
             float move = Input.GetAxisRaw("Horizontal");
-            rb.linearVelocity = new Vector2(move * speed, rb.linearVelocity.y);
+            rb.linearVelocity = new Vector2(move * speed * slowMultiplier, rb.linearVelocity.y);
             if (move != 0 && spriteRenderer != null)
             {
                 spriteRenderer.flipX = move < 0;
             }
         }
 
-        // Visée 8 directions Cuphead - FIX (sans localScale)
         if (firePoint != null && cam != null)
         {
             Vector3 mouseWorld = cam.ScreenToWorldPoint(Input.mousePosition);
@@ -122,18 +131,64 @@ public class PlayerController2D : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.LeftShift) && canDash) StartCoroutine(Dash());
 
-        // Tir souris
         if ((Input.GetKey(KeyCode.X) || Input.GetMouseButton(0)) && Time.time > nextFireTime)
         {
             Shoot();
             nextFireTime = Time.time + fireRate;
         }
 
-        if (rb.linearVelocity.y < 0) rb.linearVelocity += Vector2.up * Physics2D.gravity.y * (fallMultiplier - 1) * Time.deltaTime;
-        else if (rb.linearVelocity.y > 0 && !Input.GetButton("Jump")) rb.linearVelocity += Vector2.up * Physics2D.gravity.y * (lowJumpMultiplier - 1) * Time.deltaTime;
+        // --- GRAVITÉ LUNAIRE SEULEMENT À LA CHUTE ---
+        if (!isDashing) // <-- IMPORTANT: on touche pas la gravité pendant le dash
+        {
+            if (isSlowed)
+            {
+                if (rb.linearVelocity.y > 0.1f)
+                    rb.gravityScale = originalGravityScale; // montée = normal
+                else
+                    rb.gravityScale = originalGravityScale * 0.15f; // chute = lune
+            }
+            else
+            {
+                rb.gravityScale = originalGravityScale;
+
+                if (rb.linearVelocity.y < 0)
+                    rb.linearVelocity += Vector2.up * Physics2D.gravity.y * (fallMultiplier - 1) * Time.deltaTime;
+                else if (rb.linearVelocity.y > 0 && !Input.GetButton("Jump"))
+                    rb.linearVelocity += Vector2.up * Physics2D.gravity.y * (lowJumpMultiplier - 1) * Time.deltaTime;
+            }
+        }
     }
 
-        IEnumerator Dash()
+    // === NOUVEAU PATTERN FREEZE ===
+    public void ApplySlow(float factor, float duration)
+    {
+        if (slowCoroutine != null) StopCoroutine(slowCoroutine);
+        slowCoroutine = StartCoroutine(SlowRoutine(factor, duration));
+    }
+
+    IEnumerator SlowRoutine(float factor, float duration)
+    {
+        isSlowed = true;
+        slowMultiplier = factor; // ça c'est pour ton déplacement horizontal (0.4)
+
+        // GRAVITÉ LUNE -> quasi nul
+        if (rb != null) rb.gravityScale = originalGravityScale * 0.15f;
+
+        float t = 0f;
+        while (t < duration)
+        {
+            if (spriteRenderer != null && !isHitInvincible)
+                spriteRenderer.color = (Mathf.FloorToInt(t * 10f) % 2 == 0) ? Color.cyan : baseColor;
+            t += 0.1f;
+            yield return new WaitForSeconds(0.1f);
+        }
+
+        if (spriteRenderer != null) spriteRenderer.color = baseColor;
+        slowMultiplier = 1f;
+        isSlowed = false;
+    }
+
+    IEnumerator Dash()
     {
         canDash = false;
         isDashing = true;
@@ -163,7 +218,10 @@ public class PlayerController2D : MonoBehaviour
         yield return new WaitForSeconds(dashDuration - invisibleTime);
 
         if (dashTrail != null) dashTrail.emitting = false;
-        rb.gravityScale = originalGravity;
+        if (isSlowed)
+            rb.gravityScale = originalGravityScale * 0.15f;
+        else
+            rb.gravityScale = originalGravityScale;
 
         foreach (var eff in allPlatforms)
         {
@@ -224,7 +282,7 @@ public class PlayerController2D : MonoBehaviour
         float timer = 0f;
         while (timer < hitInvincibilityDuration)
         {
-            if (spriteRenderer != null) spriteRenderer.enabled = !spriteRenderer.enabled;
+            if (spriteRenderer != null && !isSlowed) spriteRenderer.enabled = !spriteRenderer.enabled;
             yield return new WaitForSeconds(blinkInterval);
             timer += blinkInterval;
         }
@@ -243,23 +301,5 @@ public class PlayerController2D : MonoBehaviour
         yield return new WaitForSeconds(0.4f);
         Physics2D.IgnoreCollision(playerCol, platformCol, false);
         if (effector != null) effector.enabled = true;
-    }
-
-    IEnumerator DropThroughAllPlatforms()
-    {
-        var allPlatforms = FindObjectsOfType<PlatformEffector2D>();
-        Collider2D playerCol = GetComponent<Collider2D>();
-        foreach (var eff in allPlatforms)
-        {
-            Collider2D platCol = eff.GetComponent<Collider2D>();
-            if (platCol) Physics2D.IgnoreCollision(playerCol, platCol, true);
-        }
-        rb.linearVelocity = new Vector2(rb.linearVelocity.x, -2f);
-        yield return new WaitForSeconds(0.4f);
-        foreach (var eff in allPlatforms)
-        {
-            Collider2D platCol = eff.GetComponent<Collider2D>();
-            if (platCol) Physics2D.IgnoreCollision(playerCol, platCol, false);
-        }
     }
 }
