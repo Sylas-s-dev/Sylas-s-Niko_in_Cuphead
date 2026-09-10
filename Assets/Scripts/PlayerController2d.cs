@@ -54,12 +54,14 @@ public class PlayerController2D : MonoBehaviour
     private bool isJumping;
     private LayerMask originalExcludeLayers;
     private Camera cam;
+    private Animator anim;
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         originalGravityScale = rb.gravityScale;
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        anim = GetComponent<Animator>();
         if (spriteRenderer != null) baseColor = spriteRenderer.color;
         cam = Camera.main;
         originalExcludeLayers = rb.excludeLayers;
@@ -77,9 +79,16 @@ public class PlayerController2D : MonoBehaviour
         {
             float move = Input.GetAxisRaw("Horizontal");
             rb.linearVelocity = new Vector2(move * speed * slowMultiplier, rb.linearVelocity.y);
+
             if (move != 0 && spriteRenderer != null)
             {
                 spriteRenderer.flipX = move < 0;
+            }
+
+            // ANIMATION
+            if (anim != null)
+            {
+                anim.SetFloat("Speed", Mathf.Abs(move));
             }
         }
 
@@ -209,7 +218,7 @@ public class PlayerController2D : MonoBehaviour
 
         float originalGravity = rb.gravityScale;
         rb.gravityScale = 0f;
-        float dashDir = transform.localScale.x > 0 ? 1f : -1f;
+        float dashDir = (spriteRenderer != null && spriteRenderer.flipX) ? -1f : 1f;
         if (Input.GetAxisRaw("Horizontal") != 0) dashDir = Input.GetAxisRaw("Horizontal");
         rb.linearVelocity = new Vector2(dashDir * dashSpeed, 0f);
 
