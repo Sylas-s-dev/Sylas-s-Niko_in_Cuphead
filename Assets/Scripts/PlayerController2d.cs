@@ -55,9 +55,14 @@ public class PlayerController2D : MonoBehaviour
     private LayerMask originalExcludeLayers;
     private Camera cam;
     private Animator anim;
+    private Animator animator;
 
     void Start()
     {
+
+        {
+            animator = GetComponent<Animator>();
+        }
         rb = GetComponent<Rigidbody2D>();
         originalGravityScale = rb.gravityScale;
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
@@ -75,6 +80,7 @@ public class PlayerController2D : MonoBehaviour
 
     void Update()
     {
+        // MOUVEMENT
         if (!isDashing)
         {
             float move = Input.GetAxisRaw("Horizontal");
@@ -84,12 +90,14 @@ public class PlayerController2D : MonoBehaviour
             {
                 spriteRenderer.flipX = move < 0;
             }
+        }
 
-            // ANIMATION
-            if (anim != null)
-            {
-                anim.SetFloat("Speed", Mathf.Abs(move));
-            }
+        // --- ANIMATION FINAL ---
+        if (anim != null)
+        {
+            bool isFalling = !isGrounded && rb.linearVelocity.y < -0.1f;
+            anim.SetBool("IsFalling", isFalling);
+            anim.SetFloat("Speed", Mathf.Abs(rb.linearVelocity.x));
         }
 
         if (firePoint != null && cam != null)

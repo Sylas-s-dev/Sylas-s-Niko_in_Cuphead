@@ -3333,7 +3333,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1380188661}
   m_Layer: 11
-  m_Name: Firepoint
+  m_Name: Scarfgun
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

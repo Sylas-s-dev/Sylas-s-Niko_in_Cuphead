@@ -1,13 +1,16 @@
 fileFormatVersion: 2
-guid: de0d5ef4ed950624fa09b1c91968b689
+guid: 1e52745d9e219ed46a6d854808678784
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 3802160432634631541
-    second: NikoIdleSprite_0
+      213: 1268586536723013161
+    second: NikoFalling_0
   - first:
-      213: 6531359718414195191
-    second: NikoIdleSprite_1
+      213: 2643802046554845123
+    second: NikoFalling_1
+  - first:
+      213: 2636651106347927
+    second: NikoFalling_2
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -50,7 +53,7 @@ TextureImporter:
   lightmap: 0
   compressionQuality: 50
   spriteMode: 2
-  spriteExtrude: 1
+  spriteExtrude: 0
   spriteMeshType: 0
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
@@ -103,45 +106,67 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: NikoIdleSprite_0
+      name: NikoFalling_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 40
-        height: 40
+        x: 9
+        y: 2
+        width: 20
+        height: 33
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 5759b3ec4ccf3c430800000000000000
-      internalID: 3802160432634631541
+      spriteID: 92ed730ebbcea9110800000000000000
+      internalID: 1268586536723013161
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: NikoIdleSprite_1
+      name: NikoFalling_1
       rect:
         serializedVersion: 2
-        x: 40
-        y: 0
-        width: 40
-        height: 40
+        x: 49
+        y: 1
+        width: 20
+        height: 34
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 7f99f5c2f0d04aa50800000000000000
-      internalID: 6531359718414195191
+      spriteID: 3cf2a5134fba0b420800000000000000
+      internalID: 2643802046554845123
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: NikoFalling_2
+      rect:
+        serializedVersion: 2
+        x: 89
+        y: 1
+        width: 20
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 79b279c250e590000800000000000000
+      internalID: 2636651106347927
       vertices: []
       indices: 
       edges: []
@@ -150,7 +175,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: f149671bd4cbaf34bb83f87a26cc4ec2
+    spriteID: 
     internalID: 0
     vertices: []
     indices: 
@@ -158,12 +183,11 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     spriteCustomMetadata:
-      entries:
-      - key: SpriteEditor.SliceSettings
-        value: '{"sliceOnImport":false,"gridCellCount":{"x":2.0,"y":1.0},"gridSpriteSize":{"x":40.0,"y":40.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
+      entries: []
     nameFileIdTable:
-      NikoIdleSprite_0: 3802160432634631541
-      NikoIdleSprite_1: 6531359718414195191
+      NikoFalling_0: 1268586536723013161
+      NikoFalling_1: 2643802046554845123
+      NikoFalling_2: 2636651106347927
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
