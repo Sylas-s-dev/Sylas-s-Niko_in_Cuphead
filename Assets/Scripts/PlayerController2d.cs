@@ -47,6 +47,9 @@ public class PlayerController2D : MonoBehaviour
     public int bulletCount = 1;
     public float spreadAngle = 15f;
 
+    [Header("Scarf Gun")]
+    public ScarfGunAim scarfGun; // glisse ton objet ScarfGun dedans dans l'inspector
+
     private Rigidbody2D rb;
     private float nextFireTime;
     private bool isGrounded;
@@ -65,7 +68,7 @@ public class PlayerController2D : MonoBehaviour
         }
         rb = GetComponent<Rigidbody2D>();
         originalGravityScale = rb.gravityScale;
-        spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
         anim = GetComponent<Animator>();
         if (spriteRenderer != null) baseColor = spriteRenderer.color;
         cam = Camera.main;
@@ -89,7 +92,7 @@ public class PlayerController2D : MonoBehaviour
             if (move != 0 && spriteRenderer != null)
             {
                 spriteRenderer.flipX = move < 0;
-            }
+            }        
         }
 
         // --- ANIMATION FINAL ---
@@ -98,17 +101,7 @@ public class PlayerController2D : MonoBehaviour
             bool isFalling = !isGrounded && rb.linearVelocity.y < -0.1f;
             anim.SetBool("IsFalling", isFalling);
             anim.SetFloat("Speed", Mathf.Abs(rb.linearVelocity.x));
-        }
-
-        if (firePoint != null && cam != null)
-        {
-            Vector3 mouseWorld = cam.ScreenToWorldPoint(Input.mousePosition);
-            mouseWorld.z = 0;
-            Vector2 rawDir = mouseWorld - firePoint.position;
-            float rawAngle = Mathf.Atan2(rawDir.y, rawDir.x) * Mathf.Rad2Deg;
-            float snappedAngle = Mathf.Round(rawAngle / 45f) * 45f;
-            firePoint.rotation = Quaternion.Euler(0, 0, snappedAngle);
-        }
+        }     
 
         if ((Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow) || Input.GetAxisRaw("Vertical") < -0.5f)
             && Input.GetButtonDown("Jump") && isGrounded)
@@ -251,20 +244,25 @@ public class PlayerController2D : MonoBehaviour
         isInvincible = false;
         yield return new WaitForSeconds(dashCooldown);
         canDash = true;
+
     }
 
     void Shoot()
     {
-        float startAngle = -spreadAngle * (bulletCount - 1) / 2f;
-        for (int i = 0; i < bulletCount; i++)
-        {
-            float offset = startAngle + spreadAngle * i;
-            Quaternion rot = firePoint.rotation * Quaternion.Euler(0, 0, offset);
-            GameObject b = Instantiate(bulletPrefab, firePoint.position, rot);
-            Collider2D bulletCol = b.GetComponent<Collider2D>();
-            Collider2D playerCol = GetComponent<Collider2D>();
-            if (bulletCol && playerCol) Physics2D.IgnoreCollision(bulletCol, playerCol);
-        }
+        if (scarfGun == null || scarfGun.currentFirePoint == null) return;
+        Transform fp = scarfGun.currentFirePoint;
+        int dirIndex = scarfGun.currentIndex;
+        float baseAngle = dirIndex * 45f;
+
+        Quaternion rot = Quaternion.Euler(0, 0, baseAngle);
+        GameObject b = Instantiate(bulletPrefab, fp.position, rot);
+
+        var rbBullet = b.GetComponent<Rigidbody2D>();
+        if (rbBullet != null) rbBullet.linearVelocity = rot * Vector2.right * 15f;
+
+        Collider2D bulletCol = b.GetComponent<Collider2D>();
+        Collider2D playerCol = GetComponent<Collider2D>();
+        if (bulletCol && playerCol) Physics2D.IgnoreCollision(bulletCol, playerCol);
     }
 
     void OnCollisionEnter2D(Collision2D col)
