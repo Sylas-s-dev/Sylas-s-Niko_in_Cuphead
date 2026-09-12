@@ -254,8 +254,9 @@ public class PlayerController2D : MonoBehaviour
         int dirIndex = scarfGun.currentIndex;
         float baseAngle = dirIndex * 45f;
 
+        scarfGun.ShowScarf();
         Quaternion rot = Quaternion.Euler(0, 0, baseAngle);
-        GameObject b = Instantiate(bulletPrefab, fp.position, rot);
+        GameObject b = Instantiate(bulletPrefab, fp.position, rot); // scarfGunAim = référence à ton ScarfGunAim);
 
         var rbBullet = b.GetComponent<Rigidbody2D>();
         if (rbBullet != null) rbBullet.linearVelocity = rot * Vector2.right * 15f;

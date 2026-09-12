@@ -1,23 +1,30 @@
+using System.Collections;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class ScarfGunAim : MonoBehaviour
 {
-    public Sprite[] tirSprites; // tes 8 sprites base droite
-    public Vector3[] scarfOffsets; // 8 offsets base droite
-    public Transform[] firePointsRight; // 8 firepoints quand Niko regarde à DROITE
-    public Transform[] firePointsLeft; // 8 firepoints quand Niko regarde à GAUCHE (à placer à la main)
+    public Sprite[] tirSprites;
+    [FormerlySerializedAs("scarfOffsets")]
+    public Vector3[] scarfOffsets;
+    [FormerlySerializedAs("firePoints")]
+    public Transform[] firePointsRight;
+    public Transform[] firePointsLeft;
     public Transform currentFirePoint;
 
     SpriteRenderer sr;
     Transform player;
     SpriteRenderer playerSr;
     [HideInInspector] public int currentIndex;
+    Coroutine scarfAnim;
 
     void Awake()
     {
         sr = GetComponent<SpriteRenderer>();
         player = transform.parent;
         playerSr = player.GetComponent<SpriteRenderer>();
+        sr.enabled = false;
+        transform.localScale = Vector3.one;
     }
 
     void Update()
@@ -28,15 +35,15 @@ public class ScarfGunAim : MonoBehaviour
         int i = Mathf.FloorToInt((angle + 22.5f) / 45f) % 8;
         currentIndex = i;
 
-        if (playerSr.flipX) // NIKO A GAUCHE
+        if (playerSr.flipX)
         {
-            int mirrored = (4 - i + 8) % 8; // Est -> Ouest etc...
+            int mirrored = (4 - i + 8) % 8;
             sr.sprite = tirSprites[mirrored];
             sr.flipX = true;
             transform.localPosition = new Vector3(-scarfOffsets[mirrored].x, scarfOffsets[mirrored].y, scarfOffsets[mirrored].z);
-            currentFirePoint = firePointsLeft[mirrored];
+            currentFirePoint = firePointsLeft.Length > mirrored ? firePointsLeft[mirrored] : null;
         }
-        else // NIKO A DROITE
+        else
         {
             sr.sprite = tirSprites[i];
             sr.flipX = false;
@@ -44,4 +51,49 @@ public class ScarfGunAim : MonoBehaviour
             currentFirePoint = firePointsRight[i];
         }
     }
+    float hideAt;
+    bool isVisible = false;
+
+    public void ShowScarf()
+    {
+        hideAt = Time.time + 0.4f;
+
+        if (!isVisible)
+        {
+            if (scarfAnim != null) StopCoroutine(scarfAnim);
+            scarfAnim = StartCoroutine(ScarfPop());
+        }
+    }
+
+    IEnumerator ScarfPop()
+    {
+        isVisible = true;
+        sr.enabled = true;
+        float t = 0f;
+        while (t < 1f)
+        {
+            t += Time.deltaTime / 0.08f;
+            float eased = 1f - Mathf.Pow(1f - t, 3f); // easeOutCubic propre
+            transform.localScale = new Vector3(eased, eased, 1f);
+            yield return null;
+        }
+        transform.localScale = Vector3.one;
+
+        // attend que tu arrêtes de tirer
+        while (Time.time < hideAt)
+            yield return null;
+
+        // RETRACT seulement maintenant
+        t = 0f;
+        while (t < 1f)
+        {
+            t += Time.deltaTime / 0.1f;
+            transform.localScale = new Vector3(1f - t, 1f - t, 1f);
+            yield return null;
+        }
+
+        sr.enabled = false;
+        transform.localScale = Vector3.one;
+        isVisible = false;
+    }  
 }
