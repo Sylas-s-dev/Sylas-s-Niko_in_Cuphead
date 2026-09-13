@@ -11,6 +11,7 @@ public class ScarfGunAim : MonoBehaviour
     public Transform[] firePointsRight;
     public Transform[] firePointsLeft;
     public Transform currentFirePoint;
+    [HideInInspector] public bool isDashing = false;
 
     SpriteRenderer sr;
     Transform player;
@@ -56,8 +57,9 @@ public class ScarfGunAim : MonoBehaviour
 
     public void ShowScarf()
     {
-        hideAt = Time.time + 0.4f;
+        if (isDashing) return; // bloque le tir pendant le dash
 
+        hideAt = Time.time + 0.4f;
         if (!isVisible)
         {
             if (scarfAnim != null) StopCoroutine(scarfAnim);
@@ -95,5 +97,18 @@ public class ScarfGunAim : MonoBehaviour
         sr.enabled = false;
         transform.localScale = Vector3.one;
         isVisible = false;
-    }  
+    }
+    public void ForceHideInstant()
+    {
+        if (scarfAnim != null) StopCoroutine(scarfAnim);
+        scarfAnim = null;
+        sr.enabled = false;
+        transform.localScale = Vector3.one;
+        isVisible = false;
+    }
+
+    public void ResetAfterDash()
+    {
+        ForceHideInstant();
+    }
 }

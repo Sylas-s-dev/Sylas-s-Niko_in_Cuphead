@@ -25,13 +25,16 @@ public class PlayerController2D : MonoBehaviour
     public TrailRenderer dashTrail;
     public LayerMask layersToIgnoreDuringDash;
     private bool canDash = true;
-    private bool isDashing = false;
+    public bool isDashing = false;
     private bool isInvincible = false;
     public bool IsInvincible => isInvincible || isDashing || isHitInvincible;
 
     [Header("Dash FX")]
     public GameObject dashPuffPrefab;
     public float invisibleTime = 0.15f;
+    public GameObject scarfDashGhostPrefab; // ton écharpe rouge
+    public GameObject nikoGhostPrefab;
+    public int ghostCount = 4;
 
     [Header("Coyote Time")]
     public float coyoteTime = 0.15f;
@@ -62,6 +65,11 @@ public class PlayerController2D : MonoBehaviour
     [Header("Scarf Gun")]
     public ScarfGunAim scarfGun;
 
+    [Header("Scarf Dash")]
+    public Transform neckPoint;
+    public Vector2 neckOffset = new Vector2(0f, 0.35f);
+    public float scarfGhostDuration = 0.25f;
+
     private Rigidbody2D rb;
     private SpriteRenderer spriteRenderer;
     private Animator anim;
@@ -72,13 +80,16 @@ public class PlayerController2D : MonoBehaviour
     private LayerMask originalExcludeLayers;
     private Camera cam;
 
+    [Header("Dash Collision")]
+    public LayerMask groundLayer;
+    LayerMask savedExclude;
+
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         anim = GetComponent<Animator>();
         if (spriteRenderer != null) baseColor = spriteRenderer.color;
-
         cam = Camera.main;
         originalGravityScale = rb.gravityScale;
         originalExcludeLayers = rb.excludeLayers;
@@ -93,20 +104,16 @@ public class PlayerController2D : MonoBehaviour
 
     void Update()
     {
-        // --- MOUVEMENT (bloqué pendant le dash) ---
         if (!isDashing)
         {
             float move = Input.GetAxisRaw("Horizontal");
             rb.linearVelocity = new Vector2(move * speed * slowMultiplier, rb.linearVelocity.y);
-
             if (move != 0 && spriteRenderer != null)
                 spriteRenderer.flipX = move < 0;
-
             if (Input.GetKeyDown(KeyCode.LeftShift) && canDash)
                 StartCoroutine(Dash());
         }
 
-        // --- ANIM ---
         if (anim != null)
         {
             bool falling = !isGrounded && rb.linearVelocity.y < -0.1f;
@@ -114,7 +121,6 @@ public class PlayerController2D : MonoBehaviour
             anim.SetFloat("Speed", Mathf.Abs(rb.linearVelocity.x));
         }
 
-        // --- DESCENTE PLATEFORME ---
         if ((Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow) || Input.GetAxisRaw("Vertical") < -0.5f)
             && Input.GetButtonDown("Jump") && isGrounded)
         {
@@ -127,7 +133,6 @@ public class PlayerController2D : MonoBehaviour
             }
         }
 
-        // --- JUMP ---
         if (isGrounded) coyoteTimeCounter = coyoteTime; else coyoteTimeCounter -= Time.deltaTime;
 
         if (Input.GetButtonDown("Jump") && coyoteTimeCounter > 0f)
@@ -147,20 +152,17 @@ public class PlayerController2D : MonoBehaviour
             if (rb.linearVelocity.y > 0) rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * 0.5f);
         }
 
-        // --- SHOOT ---
+        if (isDashing) return;
         if ((Input.GetKey(KeyCode.X) || Input.GetMouseButton(0)) && Time.time > nextFireTime)
         {
             Shoot();
             nextFireTime = Time.time + fireRate;
         }
 
-        // --- GRAVITÉ ---
         if (!isDashing)
         {
             if (isSlowed)
-            {
                 rb.gravityScale = (rb.linearVelocity.y > 0.1f) ? originalGravityScale : originalGravityScale * 0.15f;
-            }
             else
             {
                 rb.gravityScale = originalGravityScale;
@@ -182,8 +184,6 @@ public class PlayerController2D : MonoBehaviour
     {
         isSlowed = true;
         slowMultiplier = factor;
-        if (rb != null) rb.gravityScale = originalGravityScale * 0.15f;
-
         float t = 0f;
         while (t < duration)
         {
@@ -192,10 +192,27 @@ public class PlayerController2D : MonoBehaviour
             t += 0.1f;
             yield return new WaitForSeconds(0.1f);
         }
-
         if (spriteRenderer != null) spriteRenderer.color = baseColor;
         slowMultiplier = 1f;
         isSlowed = false;
+    }
+
+    void SpawnGhost()
+    {
+        if (nikoGhostPrefab == null || spriteRenderer == null) return;
+        GameObject g = Instantiate(nikoGhostPrefab, transform.position, Quaternion.identity);
+        g.transform.localScale = transform.localScale;
+        var ghost = g.GetComponent<NikoGhost>();
+        if (ghost != null) ghost.Init(spriteRenderer.sprite, spriteRenderer.flipX, spriteRenderer.sortingOrder - 1, 0.3f);
+    }
+
+    IEnumerator SpawnGhostsRoutine()
+    {
+        for (int i = 0; i < ghostCount; i++)
+        {
+            SpawnGhost();
+            yield return new WaitForSeconds(invisibleTime / ghostCount);
+        }
     }
 
     IEnumerator Dash()
@@ -203,41 +220,58 @@ public class PlayerController2D : MonoBehaviour
         canDash = false;
         isDashing = true;
         isInvincible = true;
-
         if (anim != null) anim.SetTrigger("Dash");
 
-        var allPlatforms = FindObjectsOfType<PlatformEffector2D>();
-        Collider2D playerCol = GetComponent<Collider2D>();
-        foreach (var eff in allPlatforms)
-        {
-            Collider2D platCol = eff.GetComponent<Collider2D>();
-            if (platCol) Physics2D.IgnoreCollision(playerCol, platCol, true);
-        }
-        rb.excludeLayers = layersToIgnoreDuringDash;
+        Vector3 startPos = transform.position;
+        float dashDir = (spriteRenderer != null && spriteRenderer.flipX) ? -1f : 1f;
+        if (Input.GetAxisRaw("Horizontal") != 0) dashDir = Mathf.Sign(Input.GetAxisRaw("Horizontal"));
+        Vector3 endPos = startPos + new Vector3(dashDir * dashSpeed * dashDuration, 0, 0);
 
+        // bloque le mouvement
+        Vector2 savedVel = rb.linearVelocity;
+        rb.linearVelocity = Vector2.zero;
+        rb.gravityScale = 0f;
+
+        // on ignore tout sauf le sol pendant le dash
+        savedExclude = rb.excludeLayers;
+        rb.excludeLayers = ~groundLayer; // exclut tout sauf Ground
+        if (scarfGun != null) scarfGun.isDashing = true;
+
+        if (scarfGun != null) scarfGun.ForceHideInstant();
         if (spriteRenderer != null) spriteRenderer.enabled = false;
-        if (dashPuffPrefab != null) Instantiate(dashPuffPrefab, transform.position, Quaternion.identity);
+        if (dashPuffPrefab != null) Instantiate(dashPuffPrefab, startPos, Quaternion.identity);
         if (dashTrail != null) dashTrail.emitting = true;
 
-        float dashDir = (spriteRenderer != null && spriteRenderer.flipX) ? -1f : 1f;
-        if (Input.GetAxisRaw("Horizontal") != 0) dashDir = Input.GetAxisRaw("Horizontal");
-
-        rb.gravityScale = 0f;
-        rb.linearVelocity = new Vector2(dashDir * dashSpeed, 0f);
-
-        yield return new WaitForSeconds(invisibleTime);
-        if (spriteRenderer != null) spriteRenderer.enabled = true;
-        yield return new WaitForSeconds(dashDuration - invisibleTime);
-
-        if (dashTrail != null) dashTrail.emitting = false;
-        rb.gravityScale = isSlowed ? originalGravityScale * 0.15f : originalGravityScale;
-
-        foreach (var eff in allPlatforms)
+        if (scarfDashGhostPrefab != null)
         {
-            Collider2D platCol = eff.GetComponent<Collider2D>();
-            if (platCol) Physics2D.IgnoreCollision(playerCol, platCol, false);
+            Transform neck = neckPoint != null ? neckPoint : transform;
+            GameObject scarf = Instantiate(scarfDashGhostPrefab, neck.position, Quaternion.identity);
+            var attached = scarf.GetComponent<ScarfAttached>();
+            if (attached != null) attached.Attach(neck, scarfGhostDuration, dashDir);
         }
-        if (!isHitInvincible) rb.excludeLayers = originalExcludeLayers;
+
+        StartCoroutine(SpawnGhostsRoutine());
+
+        // on se déplace progressivement, pas en téléportation à la fin
+        float t = 0f;
+        while (t < dashDuration)
+        {
+            t += Time.deltaTime;
+            float progress = t / dashDuration;
+            rb.MovePosition(Vector3.Lerp(startPos, endPos, progress));
+            yield return null;
+        }
+        rb.MovePosition(endPos);
+
+        if (spriteRenderer != null) spriteRenderer.enabled = true;
+        if (scarfGun != null) scarfGun.ResetAfterDash();
+        if (dashPuffPrefab != null) Instantiate(dashPuffPrefab, endPos, Quaternion.identity);
+        if (dashTrail != null) dashTrail.emitting = false;
+
+        rb.gravityScale = isSlowed ? originalGravityScale * 0.15f : originalGravityScale;
+        rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+        rb.excludeLayers = isHitInvincible ? savedExclude : originalExcludeLayers;
+        if (scarfGun != null) scarfGun.isDashing = false;
 
         isDashing = false;
         isInvincible = false;
@@ -251,14 +285,11 @@ public class PlayerController2D : MonoBehaviour
         Transform fp = scarfGun.currentFirePoint;
         int dirIndex = scarfGun.currentIndex;
         float baseAngle = dirIndex * 45f;
-
         scarfGun.ShowScarf();
         Quaternion rot = Quaternion.Euler(0, 0, baseAngle);
         GameObject b = Instantiate(bulletPrefab, fp.position, rot);
-
         var rbBullet = b.GetComponent<Rigidbody2D>();
         if (rbBullet != null) rbBullet.linearVelocity = rot * Vector2.right * 15f;
-
         Collider2D bulletCol = b.GetComponent<Collider2D>();
         Collider2D playerCol = GetComponent<Collider2D>();
         if (bulletCol && playerCol) Physics2D.IgnoreCollision(bulletCol, playerCol);
