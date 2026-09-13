@@ -8,7 +8,6 @@ public class PlayerController2D : MonoBehaviour
     [Header("Invincibilité après hit")]
     public float hitInvincibilityDuration = 1f;
     public float blinkInterval = 0.1f;
-    private SpriteRenderer spriteRenderer;
     private Coroutine invincibilityCoroutine;
     private bool isHitInvincible = false;
 
@@ -34,11 +33,24 @@ public class PlayerController2D : MonoBehaviour
     public GameObject dashPuffPrefab;
     public float invisibleTime = 0.15f;
 
-    [Header("Coyote Time")] public float coyoteTime = 0.15f;
+    [Header("Coyote Time")]
+    public float coyoteTime = 0.15f;
     private float coyoteTimeCounter;
-    [Header("Vie")] public int maxHealth = 5; public int currentHealth; public Slider healthBar; public Image healthBarFill;
-    [Header("Deplacement")] public float speed = 7f;
-    [Header("Saut Variable")] public float jumpForce = 10f; public float jumpTime = 0.20f; public float fallMultiplier = 2.5f; public float lowJumpMultiplier = 2.5f;
+
+    [Header("Vie")]
+    public int maxHealth = 5;
+    public int currentHealth;
+    public Slider healthBar;
+    public Image healthBarFill;
+
+    [Header("Deplacement")]
+    public float speed = 7f;
+
+    [Header("Saut Variable")]
+    public float jumpForce = 10f;
+    public float jumpTime = 0.20f;
+    public float fallMultiplier = 2.5f;
+    public float lowJumpMultiplier = 2.5f;
 
     [Header("Tir Multi")]
     public GameObject bulletPrefab;
@@ -48,33 +60,31 @@ public class PlayerController2D : MonoBehaviour
     public float spreadAngle = 15f;
 
     [Header("Scarf Gun")]
-    public ScarfGunAim scarfGun; // glisse ton objet ScarfGun dedans dans l'inspector
+    public ScarfGunAim scarfGun;
 
     private Rigidbody2D rb;
+    private SpriteRenderer spriteRenderer;
+    private Animator anim;
     private float nextFireTime;
     private bool isGrounded;
     private float jumpTimeCounter;
     private bool isJumping;
     private LayerMask originalExcludeLayers;
     private Camera cam;
-    private Animator anim;
-    private Animator animator;
 
     void Start()
     {
-
-        {
-            animator = GetComponent<Animator>();
-        }
         rb = GetComponent<Rigidbody2D>();
-        originalGravityScale = rb.gravityScale;
         spriteRenderer = GetComponent<SpriteRenderer>();
         anim = GetComponent<Animator>();
         if (spriteRenderer != null) baseColor = spriteRenderer.color;
+
         cam = Camera.main;
+        originalGravityScale = rb.gravityScale;
         originalExcludeLayers = rb.excludeLayers;
         currentHealth = maxHealth;
         slowMultiplier = 1f;
+
         if (healthBarFill == null && healthBar != null && healthBar.fillRect != null)
             healthBarFill = healthBar.fillRect.GetComponent<Image>();
         if (healthBar != null) { healthBar.maxValue = maxHealth; healthBar.value = currentHealth; }
@@ -83,35 +93,32 @@ public class PlayerController2D : MonoBehaviour
 
     void Update()
     {
-        // MOUVEMENT
+        // --- MOUVEMENT (bloqué pendant le dash) ---
         if (!isDashing)
         {
             float move = Input.GetAxisRaw("Horizontal");
             rb.linearVelocity = new Vector2(move * speed * slowMultiplier, rb.linearVelocity.y);
 
             if (move != 0 && spriteRenderer != null)
-            {
                 spriteRenderer.flipX = move < 0;
-            }        
+
+            if (Input.GetKeyDown(KeyCode.LeftShift) && canDash)
+                StartCoroutine(Dash());
         }
 
-        // --- ANIMATION FINAL ---
+        // --- ANIM ---
         if (anim != null)
         {
-            bool isFalling = !isGrounded && rb.linearVelocity.y < -0.1f;
-            anim.SetBool("IsFalling", isFalling);
+            bool falling = !isGrounded && rb.linearVelocity.y < -0.1f;
+            anim.SetBool("IsFalling", falling);
             anim.SetFloat("Speed", Mathf.Abs(rb.linearVelocity.x));
-        }     
+        }
 
+        // --- DESCENTE PLATEFORME ---
         if ((Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow) || Input.GetAxisRaw("Vertical") < -0.5f)
             && Input.GetButtonDown("Jump") && isGrounded)
         {
-            Collider2D platform = Physics2D.OverlapBox(
-                transform.position + Vector3.down * 0.8f,
-                new Vector2(1f, 0.2f),
-                0f,
-                LayerMask.GetMask("Platform"));
-
+            Collider2D platform = Physics2D.OverlapBox(transform.position + Vector3.down * 0.8f, new Vector2(1f, 0.2f), 0f, LayerMask.GetMask("Platform"));
             if (platform != null)
             {
                 StartCoroutine(DisablePlatformTemporarily(platform));
@@ -120,6 +127,7 @@ public class PlayerController2D : MonoBehaviour
             }
         }
 
+        // --- JUMP ---
         if (isGrounded) coyoteTimeCounter = coyoteTime; else coyoteTimeCounter -= Time.deltaTime;
 
         if (Input.GetButtonDown("Jump") && coyoteTimeCounter > 0f)
@@ -139,28 +147,23 @@ public class PlayerController2D : MonoBehaviour
             if (rb.linearVelocity.y > 0) rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * 0.5f);
         }
 
-        if (Input.GetKeyDown(KeyCode.LeftShift) && canDash) StartCoroutine(Dash());
-
+        // --- SHOOT ---
         if ((Input.GetKey(KeyCode.X) || Input.GetMouseButton(0)) && Time.time > nextFireTime)
         {
             Shoot();
             nextFireTime = Time.time + fireRate;
         }
 
-        // --- GRAVITÉ LUNAIRE SEULEMENT À LA CHUTE ---
-        if (!isDashing) // <-- IMPORTANT: on touche pas la gravité pendant le dash
+        // --- GRAVITÉ ---
+        if (!isDashing)
         {
             if (isSlowed)
             {
-                if (rb.linearVelocity.y > 0.1f)
-                    rb.gravityScale = originalGravityScale; // montée = normal
-                else
-                    rb.gravityScale = originalGravityScale * 0.15f; // chute = lune
+                rb.gravityScale = (rb.linearVelocity.y > 0.1f) ? originalGravityScale : originalGravityScale * 0.15f;
             }
             else
             {
                 rb.gravityScale = originalGravityScale;
-
                 if (rb.linearVelocity.y < 0)
                     rb.linearVelocity += Vector2.up * Physics2D.gravity.y * (fallMultiplier - 1) * Time.deltaTime;
                 else if (rb.linearVelocity.y > 0 && !Input.GetButton("Jump"))
@@ -169,7 +172,6 @@ public class PlayerController2D : MonoBehaviour
         }
     }
 
-    // === NOUVEAU PATTERN FREEZE ===
     public void ApplySlow(float factor, float duration)
     {
         if (slowCoroutine != null) StopCoroutine(slowCoroutine);
@@ -179,9 +181,7 @@ public class PlayerController2D : MonoBehaviour
     IEnumerator SlowRoutine(float factor, float duration)
     {
         isSlowed = true;
-        slowMultiplier = factor; // ça c'est pour ton déplacement horizontal (0.4)
-
-        // GRAVITÉ LUNE -> quasi nul
+        slowMultiplier = factor;
         if (rb != null) rb.gravityScale = originalGravityScale * 0.15f;
 
         float t = 0f;
@@ -204,6 +204,8 @@ public class PlayerController2D : MonoBehaviour
         isDashing = true;
         isInvincible = true;
 
+        if (anim != null) anim.SetTrigger("Dash");
+
         var allPlatforms = FindObjectsOfType<PlatformEffector2D>();
         Collider2D playerCol = GetComponent<Collider2D>();
         foreach (var eff in allPlatforms)
@@ -217,10 +219,10 @@ public class PlayerController2D : MonoBehaviour
         if (dashPuffPrefab != null) Instantiate(dashPuffPrefab, transform.position, Quaternion.identity);
         if (dashTrail != null) dashTrail.emitting = true;
 
-        float originalGravity = rb.gravityScale;
-        rb.gravityScale = 0f;
         float dashDir = (spriteRenderer != null && spriteRenderer.flipX) ? -1f : 1f;
         if (Input.GetAxisRaw("Horizontal") != 0) dashDir = Input.GetAxisRaw("Horizontal");
+
+        rb.gravityScale = 0f;
         rb.linearVelocity = new Vector2(dashDir * dashSpeed, 0f);
 
         yield return new WaitForSeconds(invisibleTime);
@@ -228,10 +230,7 @@ public class PlayerController2D : MonoBehaviour
         yield return new WaitForSeconds(dashDuration - invisibleTime);
 
         if (dashTrail != null) dashTrail.emitting = false;
-        if (isSlowed)
-            rb.gravityScale = originalGravityScale * 0.15f;
-        else
-            rb.gravityScale = originalGravityScale;
+        rb.gravityScale = isSlowed ? originalGravityScale * 0.15f : originalGravityScale;
 
         foreach (var eff in allPlatforms)
         {
@@ -244,7 +243,6 @@ public class PlayerController2D : MonoBehaviour
         isInvincible = false;
         yield return new WaitForSeconds(dashCooldown);
         canDash = true;
-
     }
 
     void Shoot()
@@ -256,7 +254,7 @@ public class PlayerController2D : MonoBehaviour
 
         scarfGun.ShowScarf();
         Quaternion rot = Quaternion.Euler(0, 0, baseAngle);
-        GameObject b = Instantiate(bulletPrefab, fp.position, rot); // scarfGunAim = référence à ton ScarfGunAim);
+        GameObject b = Instantiate(bulletPrefab, fp.position, rot);
 
         var rbBullet = b.GetComponent<Rigidbody2D>();
         if (rbBullet != null) rbBullet.linearVelocity = rot * Vector2.right * 15f;
