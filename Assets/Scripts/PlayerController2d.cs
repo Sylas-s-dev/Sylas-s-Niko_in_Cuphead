@@ -32,7 +32,7 @@ public class PlayerController2D : MonoBehaviour
     [Header("Dash FX")]
     public GameObject dashPuffPrefab;
     public float invisibleTime = 0.15f;
-    public GameObject scarfDashGhostPrefab; // ton écharpe rouge
+    public GameObject scarfDashGhostPrefab;
     public GameObject nikoGhostPrefab;
     public int ghostCount = 4;
 
@@ -54,6 +54,7 @@ public class PlayerController2D : MonoBehaviour
     public float jumpTime = 0.20f;
     public float fallMultiplier = 2.5f;
     public float lowJumpMultiplier = 2.5f;
+    [SerializeField] float runJumpThreshold = 3f;
 
     [Header("Tir Multi")]
     public GameObject bulletPrefab;
@@ -72,7 +73,7 @@ public class PlayerController2D : MonoBehaviour
 
     private Rigidbody2D rb;
     private SpriteRenderer spriteRenderer;
-    private Animator anim;
+    [SerializeField] Animator animator;
     private float nextFireTime;
     private bool isGrounded;
     private float jumpTimeCounter;
@@ -84,11 +85,15 @@ public class PlayerController2D : MonoBehaviour
     public LayerMask groundLayer;
     LayerMask savedExclude;
 
-    void Start()
+    void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        if (animator == null) animator = GetComponentInChildren<Animator>();
+    }
+
+    void Start()
+    {
         spriteRenderer = GetComponent<SpriteRenderer>();
-        anim = GetComponent<Animator>();
         if (spriteRenderer != null) baseColor = spriteRenderer.color;
         cam = Camera.main;
         originalGravityScale = rb.gravityScale;
@@ -104,6 +109,12 @@ public class PlayerController2D : MonoBehaviour
 
     void Update()
     {
+        // --- ANIM SAUTS (tes 2 versions) ---
+        bool isRunningJump = Mathf.Abs(rb.linearVelocity.x) > runJumpThreshold;
+        animator.SetBool("IsRunningJump", isRunningJump);
+        animator.SetBool("IsGrounded", isGrounded);
+        animator.SetFloat("yVelocity", rb.linearVelocity.y);
+
         if (!isDashing)
         {
             float move = Input.GetAxisRaw("Horizontal");
@@ -114,11 +125,11 @@ public class PlayerController2D : MonoBehaviour
                 StartCoroutine(Dash());
         }
 
-        if (anim != null)
+        if (animator != null)
         {
             bool falling = !isGrounded && rb.linearVelocity.y < -0.1f;
-            anim.SetBool("IsFalling", falling);
-            anim.SetFloat("Speed", Mathf.Abs(rb.linearVelocity.x));
+            animator.SetBool("IsFalling", falling);
+            animator.SetFloat("Speed", Mathf.Abs(rb.linearVelocity.x));
         }
 
         if ((Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow) || Input.GetAxisRaw("Vertical") < -0.5f)
@@ -174,6 +185,15 @@ public class PlayerController2D : MonoBehaviour
         }
     }
 
+    void LateUpdate()
+    {
+        float ppu = 40f;
+        Vector3 pos = transform.position;
+        pos.x = Mathf.Round(pos.x * ppu) / ppu;
+        pos.y = Mathf.Round(pos.y * ppu) / ppu;
+        transform.position = pos;
+    }
+
     public void ApplySlow(float factor, float duration)
     {
         if (slowCoroutine != null) StopCoroutine(slowCoroutine);
@@ -220,21 +240,19 @@ public class PlayerController2D : MonoBehaviour
         canDash = false;
         isDashing = true;
         isInvincible = true;
-        if (anim != null) anim.SetTrigger("Dash");
+        if (animator != null) animator.SetTrigger("Dash");
 
         Vector3 startPos = transform.position;
         float dashDir = (spriteRenderer != null && spriteRenderer.flipX) ? -1f : 1f;
         if (Input.GetAxisRaw("Horizontal") != 0) dashDir = Mathf.Sign(Input.GetAxisRaw("Horizontal"));
         Vector3 endPos = startPos + new Vector3(dashDir * dashSpeed * dashDuration, 0, 0);
 
-        // bloque le mouvement
         Vector2 savedVel = rb.linearVelocity;
         rb.linearVelocity = Vector2.zero;
         rb.gravityScale = 0f;
 
-        // on ignore tout sauf le sol pendant le dash
         savedExclude = rb.excludeLayers;
-        rb.excludeLayers = ~groundLayer; // exclut tout sauf Ground
+        rb.excludeLayers = ~groundLayer;
         if (scarfGun != null) scarfGun.isDashing = true;
 
         if (scarfGun != null) scarfGun.ForceHideInstant();
@@ -252,7 +270,6 @@ public class PlayerController2D : MonoBehaviour
 
         StartCoroutine(SpawnGhostsRoutine());
 
-        // on se déplace progressivement, pas en téléportation à la fin
         float t = 0f;
         while (t < dashDuration)
         {
@@ -277,14 +294,6 @@ public class PlayerController2D : MonoBehaviour
         isInvincible = false;
         yield return new WaitForSeconds(dashCooldown);
         canDash = true;
-        void LateUpdate()
-        {
-            float ppu = 40f;
-            Vector3 pos = transform.position;
-            pos.x = Mathf.Round(pos.x * ppu) / ppu;
-            pos.y = Mathf.Round(pos.y * ppu) / ppu;
-            transform.position = pos;
-        }
     }
 
     void Shoot()

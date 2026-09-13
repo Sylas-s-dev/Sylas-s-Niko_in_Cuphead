@@ -2735,7 +2735,7 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1, y: 1}
+    oldSize: {x: 0.475, y: 0.9}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -2807,6 +2807,7 @@ MonoBehaviour:
   jumpTime: 0.35
   fallMultiplier: 2.5
   lowJumpMultiplier: 2
+  runJumpThreshold: 3
   bulletPrefab: {fileID: 316697096693229664, guid: 87507c7fe887f46459ae648fae4df9e3, type: 3}
   firePoint: {fileID: 1380188661}
   fireRate: 0.2
@@ -2816,6 +2817,7 @@ MonoBehaviour:
   neckPoint: {fileID: 1561940588}
   neckOffset: {x: 3, y: 0}
   scarfGhostDuration: 0.25
+  animator: {fileID: 0}
   groundLayer:
     serializedVersion: 2
     m_Bits: 1024
