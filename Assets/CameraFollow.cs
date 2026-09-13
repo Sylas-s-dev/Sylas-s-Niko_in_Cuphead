@@ -8,9 +8,15 @@ public class CameraFollow : MonoBehaviour
 
     void LateUpdate()
     {
-        if (player == null) return;
+        Vector3 desired = player.position + offset;
+        Vector3 smoothed = Vector3.Lerp(transform.position, desired, smoothSpeed * Time.deltaTime);
 
-        Vector3 targetPos = player.position + offset;
-        transform.position = Vector3.Lerp(transform.position, targetPos, smoothSpeed * Time.deltaTime);
+        // Snap caméra sur la grille pixel
+        float ppu = 40f;
+        float unitsPerPixel = 1f / ppu;
+        smoothed.x = Mathf.Round(smoothed.x / unitsPerPixel) * unitsPerPixel;
+        smoothed.y = Mathf.Round(smoothed.y / unitsPerPixel) * unitsPerPixel;
+
+        transform.position = smoothed;
     }
 }

@@ -277,6 +277,14 @@ public class PlayerController2D : MonoBehaviour
         isInvincible = false;
         yield return new WaitForSeconds(dashCooldown);
         canDash = true;
+        void LateUpdate()
+        {
+            float ppu = 40f;
+            Vector3 pos = transform.position;
+            pos.x = Mathf.Round(pos.x * ppu) / ppu;
+            pos.y = Mathf.Round(pos.y * ppu) / ppu;
+            transform.position = pos;
+        }
     }
 
     void Shoot()
