@@ -109,15 +109,16 @@ public class PlayerController2D : MonoBehaviour
 
     void Update()
     {
-        // --- ANIM SAUTS (tes 2 versions) ---
-        bool isRunningJump = Mathf.Abs(rb.linearVelocity.x) > runJumpThreshold;
+        float move = Input.GetAxisRaw("Horizontal"); // 1. tu lis l'input d'abord
+
+        // 2. tu calcules avec move, pas avec la vitesse de la frame d'avant
+        bool isRunningJump = Mathf.Abs(move) > 0.1f;
         animator.SetBool("IsRunningJump", isRunningJump);
         animator.SetBool("IsGrounded", isGrounded);
         animator.SetFloat("yVelocity", rb.linearVelocity.y);
 
         if (!isDashing)
         {
-            float move = Input.GetAxisRaw("Horizontal");
             rb.linearVelocity = new Vector2(move * speed * slowMultiplier, rb.linearVelocity.y);
             if (move != 0 && spriteRenderer != null)
                 spriteRenderer.flipX = move < 0;
@@ -151,6 +152,7 @@ public class PlayerController2D : MonoBehaviour
             isJumping = true;
             jumpTimeCounter = jumpTime;
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+            isGrounded = false;
         }
         if (Input.GetButton("Jump") && isJumping)
         {
@@ -252,7 +254,7 @@ public class PlayerController2D : MonoBehaviour
         rb.gravityScale = 0f;
 
         savedExclude = rb.excludeLayers;
-        rb.excludeLayers = ~groundLayer;
+        rb.excludeLayers = groundLayer; // on ignore uniquement le sol
         if (scarfGun != null) scarfGun.isDashing = true;
 
         if (scarfGun != null) scarfGun.ForceHideInstant();

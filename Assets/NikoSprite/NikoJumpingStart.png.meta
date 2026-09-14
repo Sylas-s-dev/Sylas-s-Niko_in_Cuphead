@@ -1,19 +1,16 @@
 fileFormatVersion: 2
-guid: adeedc0994b5b3146bd28d90d35bd511
+guid: 1c6967b5a2d701f4fb12c8848cacd5dd
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 401566584004190230
-    second: NikoJumping_0
+      213: 7020865768126432386
+    second: NikoJumpingStart_0
   - first:
-      213: 4766610115945592829
-    second: NikoJumping_1
+      213: 158329686859168803
+    second: NikoJumpingStart_1
   - first:
-      213: -711825884591393261
-    second: NikoJumping_2
-  - first:
-      213: -3270813723028705823
-    second: NikoJumping_3
+      213: -7202720744469350664
+    second: NikoJumpingStart_2
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -109,7 +106,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: NikoJumping_0
+      name: NikoJumpingStart_0
       rect:
         serializedVersion: 2
         x: 9
@@ -124,14 +121,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 610ac393ea6a29500800000000000000
-      internalID: 401566584004190230
+      spriteID: 28440ecc7302f6160800000000000000
+      internalID: 7020865768126432386
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: NikoJumping_1
+      name: NikoJumpingStart_1
       rect:
         serializedVersion: 2
         x: 49
@@ -146,14 +143,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: df778b755a6662240800000000000000
-      internalID: 4766610115945592829
+      spriteID: 32cb3a6e200823200800000000000000
+      internalID: 158329686859168803
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: NikoJumping_2
+      name: NikoJumpingStart_2
       rect:
         serializedVersion: 2
         x: 89
@@ -168,30 +165,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 316700f11261f16f0800000000000000
-      internalID: -711825884591393261
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: NikoJumping_3
-      rect:
-        serializedVersion: 2
-        x: 129
-        y: 2
-        width: 19
-        height: 36
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 1eda6689f3cbb92d0800000000000000
-      internalID: -3270813723028705823
+      spriteID: 8f6319105abca0c90800000000000000
+      internalID: -7202720744469350664
       vertices: []
       indices: 
       edges: []
@@ -210,10 +185,9 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      NikoJumping_0: 401566584004190230
-      NikoJumping_1: 4766610115945592829
-      NikoJumping_2: -711825884591393261
-      NikoJumping_3: -3270813723028705823
+      NikoJumpingStart_0: 7020865768126432386
+      NikoJumpingStart_1: 158329686859168803
+      NikoJumpingStart_2: -7202720744469350664
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

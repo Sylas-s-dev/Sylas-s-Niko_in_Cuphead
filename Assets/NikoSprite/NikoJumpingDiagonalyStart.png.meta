@@ -1,19 +1,16 @@
 fileFormatVersion: 2
-guid: 59faf0e05c618f0429a1cb04a8a3a415
+guid: 42718dcbfd936f2489b2a7c58a6b6395
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 401566584004190230
-    second: NikoJumping_0
+      213: -512369033969235503
+    second: NikoJumpingDiagonalyStart_0
   - first:
-      213: 4766610115945592829
-    second: NikoJumping_1
+      213: -6344096784825906243
+    second: NikoJumpingDiagonalyStart_1
   - first:
-      213: -711825884591393261
-    second: NikoJumping_2
-  - first:
-      213: -3270813723028705823
-    second: NikoJumping_3
+      213: -3777138415725300088
+    second: NikoJumpingDiagonalyStart_2
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -109,7 +106,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: NikoJumping_0
+      name: NikoJumpingDiagonalyStart_0
       rect:
         serializedVersion: 2
         x: 9
@@ -124,19 +121,19 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 610ac393ea6a29500800000000000000
-      internalID: 401566584004190230
+      spriteID: 1d98a580413b3e8f0800000000000000
+      internalID: -512369033969235503
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: NikoJumping_1
+      name: NikoJumpingDiagonalyStart_1
       rect:
         serializedVersion: 2
         x: 49
         y: 2
-        width: 20
+        width: 19
         height: 36
       alignment: 0
       pivot: {x: 0, y: 0}
@@ -146,20 +143,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: df778b755a6662240800000000000000
-      internalID: 4766610115945592829
+      spriteID: dbb01cf269d35f7a0800000000000000
+      internalID: -6344096784825906243
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: NikoJumping_2
+      name: NikoJumpingDiagonalyStart_2
       rect:
         serializedVersion: 2
         x: 89
-        y: 2
-        width: 19
-        height: 36
+        y: 1
+        width: 17
+        height: 37
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -168,30 +165,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 316700f11261f16f0800000000000000
-      internalID: -711825884591393261
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: NikoJumping_3
-      rect:
-        serializedVersion: 2
-        x: 129
-        y: 2
-        width: 19
-        height: 36
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 1eda6689f3cbb92d0800000000000000
-      internalID: -3270813723028705823
+      spriteID: 886363f7f98e49bc0800000000000000
+      internalID: -3777138415725300088
       vertices: []
       indices: 
       edges: []
@@ -210,10 +185,9 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      NikoJumping_0: 401566584004190230
-      NikoJumping_1: 4766610115945592829
-      NikoJumping_2: -711825884591393261
-      NikoJumping_3: -3270813723028705823
+      NikoJumpingDiagonalyStart_0: -512369033969235503
+      NikoJumpingDiagonalyStart_1: -6344096784825906243
+      NikoJumpingDiagonalyStart_2: -3777138415725300088
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
