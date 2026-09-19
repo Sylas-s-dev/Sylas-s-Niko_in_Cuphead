@@ -41,10 +41,9 @@ public class PlayerController2D : MonoBehaviour
     private float coyoteTimeCounter;
 
     [Header("Vie")]
-    public int maxHealth = 5;
+    public int maxHealth = 3; // mets 3
     public int currentHealth;
-    public Slider healthBar;
-    public Image healthBarFill;
+    public PlayerSunHealthBar sunBar; // remplace healthBar Slider
 
     [Header("Deplacement")]
     public float speed = 7f;
@@ -98,20 +97,29 @@ public class PlayerController2D : MonoBehaviour
         cam = Camera.main;
         originalGravityScale = rb.gravityScale;
         originalExcludeLayers = rb.excludeLayers;
-        currentHealth = maxHealth;
         slowMultiplier = 1f;
-
-        if (healthBarFill == null && healthBar != null && healthBar.fillRect != null)
-            healthBarFill = healthBar.fillRect.GetComponent<Image>();
-        if (healthBar != null) { healthBar.maxValue = maxHealth; healthBar.value = currentHealth; }
-        if (healthBarFill != null) healthBarFill.fillAmount = 1f;
+        currentHealth = maxHealth;
+        if (sunBar != null) sunBar.InitBar();
     }
 
     void Update()
     {
-        float move = Input.GetAxisRaw("Horizontal"); // 1. tu lis l'input d'abord
+        float move = Input.GetAxisRaw("Horizontal");
 
-        // 2. tu calcules avec move, pas avec la vitesse de la frame d'avant
+        // 1 seul check sol, fiable
+        Collider2D col = GetComponent<Collider2D>();
+        LayerMask solMask = groundLayer;
+        if (solMask == 0) solMask = LayerMask.GetMask("Ground", "Platform");
+
+        Bounds b = col.bounds;
+        Vector2 feetPos = new Vector2(b.center.x, b.min.y - 0.05f);
+        isGrounded = Physics2D.OverlapBox(feetPos, new Vector2(b.size.x * 0.8f, 0.1f), 0f, solMask) != null;
+
+        if (isGrounded)
+            coyoteTimeCounter = coyoteTime;
+        else
+            coyoteTimeCounter -= Time.deltaTime;
+
         bool isRunningJump = Mathf.Abs(move) > 0.1f;
         animator.SetBool("IsRunningJump", isRunningJump);
         animator.SetBool("IsGrounded", isGrounded);
@@ -133,6 +141,7 @@ public class PlayerController2D : MonoBehaviour
             animator.SetFloat("Speed", Mathf.Abs(rb.linearVelocity.x));
         }
 
+        // traverser plateforme
         if ((Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow) || Input.GetAxisRaw("Vertical") < -0.5f)
             && Input.GetButtonDown("Jump") && isGrounded)
         {
@@ -145,14 +154,13 @@ public class PlayerController2D : MonoBehaviour
             }
         }
 
-        if (isGrounded) coyoteTimeCounter = coyoteTime; else coyoteTimeCounter -= Time.deltaTime;
-
         if (Input.GetButtonDown("Jump") && coyoteTimeCounter > 0f)
         {
             isJumping = true;
             jumpTimeCounter = jumpTime;
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
             isGrounded = false;
+            coyoteTimeCounter = 0f;
         }
         if (Input.GetButton("Jump") && isJumping)
         {
@@ -166,29 +174,29 @@ public class PlayerController2D : MonoBehaviour
         }
 
         if (isDashing) return;
+
         if ((Input.GetKey(KeyCode.X) || Input.GetMouseButton(0)) && Time.time > nextFireTime)
         {
             Shoot();
             nextFireTime = Time.time + fireRate;
         }
 
-        if (!isDashing)
+        if (isSlowed)
+            rb.gravityScale = (rb.linearVelocity.y > 0.1f) ? originalGravityScale : originalGravityScale * 0.15f;
+        else
         {
-            if (isSlowed)
-                rb.gravityScale = (rb.linearVelocity.y > 0.1f) ? originalGravityScale : originalGravityScale * 0.15f;
-            else
-            {
-                rb.gravityScale = originalGravityScale;
-                if (rb.linearVelocity.y < 0)
-                    rb.linearVelocity += Vector2.up * Physics2D.gravity.y * (fallMultiplier - 1) * Time.deltaTime;
-                else if (rb.linearVelocity.y > 0 && !Input.GetButton("Jump"))
-                    rb.linearVelocity += Vector2.up * Physics2D.gravity.y * (lowJumpMultiplier - 1) * Time.deltaTime;
-            }
+            rb.gravityScale = originalGravityScale;
+            if (rb.linearVelocity.y < 0)
+                rb.linearVelocity += Vector2.up * Physics2D.gravity.y * (fallMultiplier - 1) * Time.deltaTime;
+            else if (rb.linearVelocity.y > 0 && !Input.GetButton("Jump"))
+                rb.linearVelocity += Vector2.up * Physics2D.gravity.y * (lowJumpMultiplier - 1) * Time.deltaTime;
         }
     }
 
+
     void LateUpdate()
     {
+        if (isDashing) return; // IMPORTANT sinon ça bloque le dash
         float ppu = 40f;
         Vector3 pos = transform.position;
         pos.x = Mathf.Round(pos.x * ppu) / ppu;
@@ -226,16 +234,32 @@ public class PlayerController2D : MonoBehaviour
         g.transform.localScale = transform.localScale;
         var ghost = g.GetComponent<NikoGhost>();
         if (ghost != null) ghost.Init(spriteRenderer.sprite, spriteRenderer.flipX, spriteRenderer.sortingOrder - 1, 0.3f);
+
+        // ÉCHARPE - on l'instancie juste, pas besoin de Init()
+        if (scarfDashGhostPrefab != null && neckPoint != null)
+        {
+            GameObject scarfG = Instantiate(scarfDashGhostPrefab, neckPoint.position, neckPoint.rotation);
+            // si ton prefab a un SpriteRenderer, on lui met le bon flip
+            var sr = scarfG.GetComponentInChildren<SpriteRenderer>();
+            if (sr != null) sr.flipX = spriteRenderer.flipX;
+            Destroy(scarfG, scarfGhostDuration);
+        }
     }
 
     IEnumerator SpawnGhostsRoutine()
     {
-        for (int i = 0; i < ghostCount; i++)
+        SpawnGhost();
+        yield return null;
+        for (int i = 1; i < ghostCount; i++)
         {
             SpawnGhost();
             yield return new WaitForSeconds(invisibleTime / ghostCount);
         }
     }
+
+    // DANS L'INSPECTEUR : 
+    // layersToIgnoreDuringDash doit contenir UNIQUEMENT Enemy + Bullet + Boss
+    // NE JAMAIS mettre Ground ou Platform dedans
 
     IEnumerator Dash()
     {
@@ -244,56 +268,50 @@ public class PlayerController2D : MonoBehaviour
         isInvincible = true;
         if (animator != null) animator.SetTrigger("Dash");
 
-        Vector3 startPos = transform.position;
-        float dashDir = (spriteRenderer != null && spriteRenderer.flipX) ? -1f : 1f;
-        if (Input.GetAxisRaw("Horizontal") != 0) dashDir = Mathf.Sign(Input.GetAxisRaw("Horizontal"));
-        Vector3 endPos = startPos + new Vector3(dashDir * dashSpeed * dashDuration, 0, 0);
+        float dashDir = Input.GetAxisRaw("Horizontal");
+        if (Mathf.Abs(dashDir) < 0.1f)
+            dashDir = (spriteRenderer != null && spriteRenderer.flipX) ? -1f : 1f;
+        if (dashDir == 0) dashDir = 1f;
 
-        Vector2 savedVel = rb.linearVelocity;
-        rb.linearVelocity = Vector2.zero;
+        float savedGravity = rb.gravityScale;
         rb.gravityScale = 0f;
+        Vector2 savedVel = rb.linearVelocity;
 
         savedExclude = rb.excludeLayers;
-        rb.excludeLayers = groundLayer; // on ignore uniquement le sol
-        if (scarfGun != null) scarfGun.isDashing = true;
+        rb.excludeLayers = originalExcludeLayers | layersToIgnoreDuringDash;
+        rb.excludeLayers &= ~groundLayer;
 
-        if (scarfGun != null) scarfGun.ForceHideInstant();
-        if (spriteRenderer != null) spriteRenderer.enabled = false;
-        if (dashPuffPrefab != null) Instantiate(dashPuffPrefab, startPos, Quaternion.identity);
+        if (scarfGun != null) { scarfGun.isDashing = true; scarfGun.ForceHideInstant(); }
+        if (dashPuffPrefab != null) Instantiate(dashPuffPrefab, transform.position, Quaternion.identity);
         if (dashTrail != null) dashTrail.emitting = true;
-
-        if (scarfDashGhostPrefab != null)
-        {
-            Transform neck = neckPoint != null ? neckPoint : transform;
-            GameObject scarf = Instantiate(scarfDashGhostPrefab, neck.position, Quaternion.identity);
-            var attached = scarf.GetComponent<ScarfAttached>();
-            if (attached != null) attached.Attach(neck, scarfGhostDuration, dashDir);
-        }
 
         StartCoroutine(SpawnGhostsRoutine());
 
-        float t = 0f;
-        while (t < dashDuration)
-        {
-            t += Time.deltaTime;
-            float progress = t / dashDuration;
-            rb.MovePosition(Vector3.Lerp(startPos, endPos, progress));
-            yield return null;
-        }
-        rb.MovePosition(endPos);
+        // on rend invisible APRES avoir spawn le premier ghost
+        yield return null;
+        if (spriteRenderer != null) spriteRenderer.enabled = false;
+
+        rb.linearVelocity = new Vector2(dashDir * dashSpeed, 0f);
+
+        yield return new WaitForSeconds(dashDuration);
+
+        // FIN DU DASH - on remet tout
+        rb.linearVelocity = new Vector2(0f, savedVel.y * 0.2f);
+        rb.gravityScale = isSlowed ? originalGravityScale * 0.15f : savedGravity;
 
         if (spriteRenderer != null) spriteRenderer.enabled = true;
         if (scarfGun != null) scarfGun.ResetAfterDash();
-        if (dashPuffPrefab != null) Instantiate(dashPuffPrefab, endPos, Quaternion.identity);
+        if (dashPuffPrefab != null) Instantiate(dashPuffPrefab, transform.position, Quaternion.identity);
         if (dashTrail != null) dashTrail.emitting = false;
 
-        rb.gravityScale = isSlowed ? originalGravityScale * 0.15f : originalGravityScale;
-        rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
-        rb.excludeLayers = isHitInvincible ? savedExclude : originalExcludeLayers;
-        if (scarfGun != null) scarfGun.isDashing = false;
+        if (isHitInvincible) rb.excludeLayers = originalExcludeLayers | layersToIgnoreDuringDash;
+        else rb.excludeLayers = originalExcludeLayers;
+        rb.excludeLayers &= ~groundLayer;
 
+        if (scarfGun != null) scarfGun.isDashing = false;
         isDashing = false;
         isInvincible = false;
+
         yield return new WaitForSeconds(dashCooldown);
         canDash = true;
     }
@@ -314,23 +332,12 @@ public class PlayerController2D : MonoBehaviour
         if (bulletCol && playerCol) Physics2D.IgnoreCollision(bulletCol, playerCol);
     }
 
-    void OnCollisionEnter2D(Collision2D col)
-    {
-        if (col.gameObject.CompareTag("Ground") || col.gameObject.layer == LayerMask.NameToLayer("Platform"))
-        { isGrounded = true; coyoteTimeCounter = coyoteTime; }
-    }
-    void OnCollisionExit2D(Collision2D col)
-    {
-        if (col.gameObject.CompareTag("Ground") || col.gameObject.layer == LayerMask.NameToLayer("Platform"))
-            isGrounded = false;
-    }
-
     public void TakeDamage(int damage)
     {
         if (IsInvincible) return;
         currentHealth -= damage;
-        if (healthBar != null) healthBar.value = currentHealth;
-        if (healthBarFill != null) healthBarFill.fillAmount = (float)currentHealth / maxHealth;
+        if (sunBar != null) sunBar.UpdateHealth(currentHealth);
+
         if (currentHealth <= 0) SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         else
         {
@@ -342,7 +349,9 @@ public class PlayerController2D : MonoBehaviour
     IEnumerator HitInvincibility()
     {
         isHitInvincible = true;
-        rb.excludeLayers = layersToIgnoreDuringDash;
+        rb.excludeLayers = originalExcludeLayers | layersToIgnoreDuringDash;
+        rb.excludeLayers &= ~groundLayer; // on garde le sol même en invincibilité
+
         float timer = 0f;
         while (timer < hitInvincibilityDuration)
         {
