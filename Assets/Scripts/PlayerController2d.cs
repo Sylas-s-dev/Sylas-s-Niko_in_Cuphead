@@ -41,9 +41,9 @@ public class PlayerController2D : MonoBehaviour
     private float coyoteTimeCounter;
 
     [Header("Vie")]
-    public int maxHealth = 3; // mets 3
+    public int maxHealth = 3;
     public int currentHealth;
-    public PlayerSunHealthBar sunBar; // remplace healthBar Slider
+    public PlayerSunHealthBar sunBar;
 
     [Header("Deplacement")]
     public float speed = 7f;
@@ -55,16 +55,14 @@ public class PlayerController2D : MonoBehaviour
     public float lowJumpMultiplier = 2.5f;
     [SerializeField] float runJumpThreshold = 3f;
 
-    [Header("Tir Multi")]
+    [Header("Armes - Nouveau Système")]
+    public WeaponData currentWeapon; // Glisse ta Plume ici par défaut
     public GameObject bulletPrefab;
-    public Transform firePoint;
-    public float fireRate = 0.2f;
-    public int bulletCount = 1;
-    public float spreadAngle = 15f;
+    public Transform firePoint; // fallback si pas de ScarfGun
+    public float fireRate = 0.2f; // sera écrasé par WeaponData si présent
 
     [Header("Scarf Gun")]
     public ScarfGunAim scarfGun;
-
     [Header("Scarf Dash")]
     public Transform neckPoint;
     public Vector2 neckOffset = new Vector2(0f, 0.35f);
@@ -79,7 +77,6 @@ public class PlayerController2D : MonoBehaviour
     private bool isJumping;
     private LayerMask originalExcludeLayers;
     private Camera cam;
-
     [Header("Dash Collision")]
     public LayerMask groundLayer;
     LayerMask savedExclude;
@@ -100,25 +97,34 @@ public class PlayerController2D : MonoBehaviour
         slowMultiplier = 1f;
         currentHealth = maxHealth;
         if (sunBar != null) sunBar.InitBar();
+
+        if (currentWeapon != null) fireRate = currentWeapon.fireRate;
+    }
+
+    // APPELÉ PAR TON MENU OPTION
+    public void EquipWeapon(WeaponData newWeapon)
+    {
+        currentWeapon = newWeapon;
+        fireRate = newWeapon.fireRate;
+        if (newWeapon.weaponAnimator != null && animator != null)
+        {
+            animator.runtimeAnimatorController = newWeapon.weaponAnimator;
+        }
+        Debug.Log("Arme équipée: " + newWeapon.weaponName);
     }
 
     void Update()
     {
         float move = Input.GetAxisRaw("Horizontal");
-
-        // 1 seul check sol, fiable
         Collider2D col = GetComponent<Collider2D>();
         LayerMask solMask = groundLayer;
         if (solMask == 0) solMask = LayerMask.GetMask("Ground", "Platform");
-
         Bounds b = col.bounds;
         Vector2 feetPos = new Vector2(b.center.x, b.min.y - 0.05f);
         isGrounded = Physics2D.OverlapBox(feetPos, new Vector2(b.size.x * 0.8f, 0.1f), 0f, solMask) != null;
 
-        if (isGrounded)
-            coyoteTimeCounter = coyoteTime;
-        else
-            coyoteTimeCounter -= Time.deltaTime;
+        if (isGrounded) coyoteTimeCounter = coyoteTime;
+        else coyoteTimeCounter -= Time.deltaTime;
 
         bool isRunningJump = Mathf.Abs(move) > 0.1f;
         animator.SetBool("IsRunningJump", isRunningJump);
@@ -128,10 +134,8 @@ public class PlayerController2D : MonoBehaviour
         if (!isDashing)
         {
             rb.linearVelocity = new Vector2(move * speed * slowMultiplier, rb.linearVelocity.y);
-            if (move != 0 && spriteRenderer != null)
-                spriteRenderer.flipX = move < 0;
-            if (Input.GetKeyDown(KeyCode.LeftShift) && canDash)
-                StartCoroutine(Dash());
+            if (move != 0 && spriteRenderer != null) spriteRenderer.flipX = move < 0;
+            if (Input.GetKeyDown(KeyCode.LeftShift) && canDash) StartCoroutine(Dash());
         }
 
         if (animator != null)
@@ -141,7 +145,6 @@ public class PlayerController2D : MonoBehaviour
             animator.SetFloat("Speed", Mathf.Abs(rb.linearVelocity.x));
         }
 
-        // traverser plateforme
         if ((Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow) || Input.GetAxisRaw("Vertical") < -0.5f)
             && Input.GetButtonDown("Jump") && isGrounded)
         {
@@ -193,10 +196,9 @@ public class PlayerController2D : MonoBehaviour
         }
     }
 
-
     void LateUpdate()
     {
-        if (isDashing) return; // IMPORTANT sinon ça bloque le dash
+        if (isDashing) return;
         float ppu = 40f;
         Vector3 pos = transform.position;
         pos.x = Mathf.Round(pos.x * ppu) / ppu;
@@ -204,29 +206,94 @@ public class PlayerController2D : MonoBehaviour
         transform.position = pos;
     }
 
+    // --- TIR MODIFIÉ ---
+    void Shoot()
+    {
+        Transform fp = null;
+        int dirIndex = 0;
+        float baseAngle = 0f;
+
+        if (scarfGun != null && scarfGun.currentFirePoint != null)
+        {
+            fp = scarfGun.currentFirePoint;
+            dirIndex = scarfGun.currentIndex;
+            baseAngle = dirIndex * 45f;
+            scarfGun.ShowScarf();
+        }
+        else if (firePoint != null)
+        {
+            fp = firePoint;
+            baseAngle = spriteRenderer.flipX ? 180f : 0f;
+        }
+        else return;
+
+        // Si pas d'arme assignée -> comportement de base (ta Plume)
+        int count = currentWeapon != null ? currentWeapon.projectileCount : 1;
+        float spread = currentWeapon != null ? currentWeapon.spreadAngle : 0f;
+        float projSpeed = currentWeapon != null ? currentWeapon.projectileSpeed : 15f;
+
+        for (int i = 0; i < count; i++)
+        {
+            bool isRedDice = false;
+            float dmgMult = 1f;
+
+            if (currentWeapon != null)
+            {
+                dmgMult = currentWeapon.damageMultiplier;
+                // Dé : 5% de chance rouge x2 dégats
+                if (currentWeapon.weaponName == "Dé" && Random.value < 0.05f)
+                {
+                    isRedDice = true;
+                    dmgMult *= 2f;
+                }
+            }
+
+            float angleOffset = 0f;
+            if (count > 1)
+            {
+                angleOffset = -spread / 2f + (spread / (count - 1)) * i;
+            }
+
+            Quaternion rot = Quaternion.Euler(0, 0, baseAngle + angleOffset);
+            GameObject b = Instantiate(bulletPrefab, fp.position, rot);
+
+            // On essaye d'init ta balle si elle a le script Balle
+            var balleScript = b.GetComponent<Bullet>(); // ou Balle selon ton nom
+            if (balleScript != null)
+            {
+                // Il faudra ajouter une méthode Init dans BalleP1
+                balleScript.Init(dmgMult, projSpeed, currentWeapon != null && currentWeapon.hasHoming, currentWeapon != null ? currentWeapon.homingStrength : 0f, isRedDice);
+            }
+            else
+            {
+                var rbBullet = b.GetComponent<Rigidbody2D>();
+                if (rbBullet != null) rbBullet.linearVelocity = rot * Vector2.right * projSpeed;
+            }
+
+            Collider2D bulletCol = b.GetComponent<Collider2D>();
+            Collider2D playerCol = GetComponent<Collider2D>();
+            if (bulletCol && playerCol) Physics2D.IgnoreCollision(bulletCol, playerCol);
+        }
+    }
+
+    //... Le reste de ton code (Slow, Ghost, Dash, TakeDamage) reste identique...
     public void ApplySlow(float factor, float duration)
     {
         if (slowCoroutine != null) StopCoroutine(slowCoroutine);
         slowCoroutine = StartCoroutine(SlowRoutine(factor, duration));
     }
-
     IEnumerator SlowRoutine(float factor, float duration)
     {
-        isSlowed = true;
-        slowMultiplier = factor;
-        float t = 0f;
+        isSlowed = true; slowMultiplier = factor; float t = 0f;
         while (t < duration)
         {
             if (spriteRenderer != null && !isHitInvincible)
                 spriteRenderer.color = (Mathf.FloorToInt(t * 10f) % 2 == 0) ? Color.cyan : baseColor;
-            t += 0.1f;
-            yield return new WaitForSeconds(0.1f);
+            t += 0.1f; yield return new WaitForSeconds(0.1f);
         }
         if (spriteRenderer != null) spriteRenderer.color = baseColor;
-        slowMultiplier = 1f;
-        isSlowed = false;
+        slowMultiplier = 1f; isSlowed = false;
     }
-
     void SpawnGhost()
     {
         if (nikoGhostPrefab == null || spriteRenderer == null) return;
@@ -234,136 +301,67 @@ public class PlayerController2D : MonoBehaviour
         g.transform.localScale = transform.localScale;
         var ghost = g.GetComponent<NikoGhost>();
         if (ghost != null) ghost.Init(spriteRenderer.sprite, spriteRenderer.flipX, spriteRenderer.sortingOrder - 1, 0.3f);
-
-        // ÉCHARPE - on l'instancie juste, pas besoin de Init()
         if (scarfDashGhostPrefab != null && neckPoint != null)
         {
             GameObject scarfG = Instantiate(scarfDashGhostPrefab, neckPoint.position, neckPoint.rotation);
-            // si ton prefab a un SpriteRenderer, on lui met le bon flip
             var sr = scarfG.GetComponentInChildren<SpriteRenderer>();
             if (sr != null) sr.flipX = spriteRenderer.flipX;
             Destroy(scarfG, scarfGhostDuration);
         }
     }
-
     IEnumerator SpawnGhostsRoutine()
     {
-        SpawnGhost();
-        yield return null;
-        for (int i = 1; i < ghostCount; i++)
-        {
-            SpawnGhost();
-            yield return new WaitForSeconds(invisibleTime / ghostCount);
-        }
+        SpawnGhost(); yield return null;
+        for (int i = 1; i < ghostCount; i++) { SpawnGhost(); yield return new WaitForSeconds(invisibleTime / ghostCount); }
     }
-
-    // DANS L'INSPECTEUR : 
-    // layersToIgnoreDuringDash doit contenir UNIQUEMENT Enemy + Bullet + Boss
-    // NE JAMAIS mettre Ground ou Platform dedans
-
     IEnumerator Dash()
     {
-        canDash = false;
-        isDashing = true;
-        isInvincible = true;
+        canDash = false; isDashing = true; isInvincible = true;
         if (animator != null) animator.SetTrigger("Dash");
-
         float dashDir = Input.GetAxisRaw("Horizontal");
-        if (Mathf.Abs(dashDir) < 0.1f)
-            dashDir = (spriteRenderer != null && spriteRenderer.flipX) ? -1f : 1f;
+        if (Mathf.Abs(dashDir) < 0.1f) dashDir = (spriteRenderer != null && spriteRenderer.flipX) ? -1f : 1f;
         if (dashDir == 0) dashDir = 1f;
-
-        float savedGravity = rb.gravityScale;
-        rb.gravityScale = 0f;
-        Vector2 savedVel = rb.linearVelocity;
-
-        savedExclude = rb.excludeLayers;
-        rb.excludeLayers = originalExcludeLayers | layersToIgnoreDuringDash;
+        float savedGravity = rb.gravityScale; rb.gravityScale = 0f; Vector2 savedVel = rb.linearVelocity;
+        savedExclude = rb.excludeLayers; rb.excludeLayers = originalExcludeLayers | layersToIgnoreDuringDash;
         rb.excludeLayers &= ~groundLayer;
-
         if (scarfGun != null) { scarfGun.isDashing = true; scarfGun.ForceHideInstant(); }
         if (dashPuffPrefab != null) Instantiate(dashPuffPrefab, transform.position, Quaternion.identity);
         if (dashTrail != null) dashTrail.emitting = true;
-
-        StartCoroutine(SpawnGhostsRoutine());
-
-        // on rend invisible APRES avoir spawn le premier ghost
-        yield return null;
+        StartCoroutine(SpawnGhostsRoutine()); yield return null;
         if (spriteRenderer != null) spriteRenderer.enabled = false;
-
         rb.linearVelocity = new Vector2(dashDir * dashSpeed, 0f);
-
         yield return new WaitForSeconds(dashDuration);
-
-        // FIN DU DASH - on remet tout
         rb.linearVelocity = new Vector2(0f, savedVel.y * 0.2f);
         rb.gravityScale = isSlowed ? originalGravityScale * 0.15f : savedGravity;
-
         if (spriteRenderer != null) spriteRenderer.enabled = true;
         if (scarfGun != null) scarfGun.ResetAfterDash();
         if (dashPuffPrefab != null) Instantiate(dashPuffPrefab, transform.position, Quaternion.identity);
         if (dashTrail != null) dashTrail.emitting = false;
-
         if (isHitInvincible) rb.excludeLayers = originalExcludeLayers | layersToIgnoreDuringDash;
         else rb.excludeLayers = originalExcludeLayers;
         rb.excludeLayers &= ~groundLayer;
-
-        if (scarfGun != null) scarfGun.isDashing = false;
-        isDashing = false;
-        isInvincible = false;
-
-        yield return new WaitForSeconds(dashCooldown);
-        canDash = true;
+        if (scarfGun != null) scarfGun.isDashing = false; isDashing = false; isInvincible = false;
+        yield return new WaitForSeconds(dashCooldown); canDash = true;
     }
-
-    void Shoot()
-    {
-        if (scarfGun == null || scarfGun.currentFirePoint == null) return;
-        Transform fp = scarfGun.currentFirePoint;
-        int dirIndex = scarfGun.currentIndex;
-        float baseAngle = dirIndex * 45f;
-        scarfGun.ShowScarf();
-        Quaternion rot = Quaternion.Euler(0, 0, baseAngle);
-        GameObject b = Instantiate(bulletPrefab, fp.position, rot);
-        var rbBullet = b.GetComponent<Rigidbody2D>();
-        if (rbBullet != null) rbBullet.linearVelocity = rot * Vector2.right * 15f;
-        Collider2D bulletCol = b.GetComponent<Collider2D>();
-        Collider2D playerCol = GetComponent<Collider2D>();
-        if (bulletCol && playerCol) Physics2D.IgnoreCollision(bulletCol, playerCol);
-    }
-
     public void TakeDamage(int damage)
     {
-        if (IsInvincible) return;
-        currentHealth -= damage;
+        if (IsInvincible) return; currentHealth -= damage;
         if (sunBar != null) sunBar.UpdateHealth(currentHealth);
-
         if (currentHealth <= 0) SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-        else
-        {
-            if (invincibilityCoroutine != null) StopCoroutine(invincibilityCoroutine);
-            invincibilityCoroutine = StartCoroutine(HitInvincibility());
-        }
+        else { if (invincibilityCoroutine != null) StopCoroutine(invincibilityCoroutine); invincibilityCoroutine = StartCoroutine(HitInvincibility()); }
     }
-
     IEnumerator HitInvincibility()
     {
-        isHitInvincible = true;
-        rb.excludeLayers = originalExcludeLayers | layersToIgnoreDuringDash;
-        rb.excludeLayers &= ~groundLayer; // on garde le sol même en invincibilité
-
-        float timer = 0f;
+        isHitInvincible = true; rb.excludeLayers = originalExcludeLayers | layersToIgnoreDuringDash;
+        rb.excludeLayers &= ~groundLayer; float timer = 0f;
         while (timer < hitInvincibilityDuration)
         {
             if (spriteRenderer != null && !isSlowed) spriteRenderer.enabled = !spriteRenderer.enabled;
-            yield return new WaitForSeconds(blinkInterval);
-            timer += blinkInterval;
+            yield return new WaitForSeconds(blinkInterval); timer += blinkInterval;
         }
         if (spriteRenderer != null) spriteRenderer.enabled = true;
-        if (!isDashing) rb.excludeLayers = originalExcludeLayers;
-        isHitInvincible = false;
+        if (!isDashing) rb.excludeLayers = originalExcludeLayers; isHitInvincible = false;
     }
-
     IEnumerator DisablePlatformTemporarily(Collider2D platformCol)
     {
         Collider2D playerCol = GetComponent<Collider2D>();
