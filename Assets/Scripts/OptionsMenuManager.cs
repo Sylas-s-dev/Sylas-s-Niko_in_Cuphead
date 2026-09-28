@@ -13,6 +13,17 @@ public class OptionsMenuManager : MonoBehaviour
     public Slider volumeSlider;
     public AudioMixer audioMixer;
 
+    public void EquipPlume() { EquipWeapon("Plume"); }
+    public void EquipMedaillon() { EquipWeapon("Medaillon"); }
+    public void EquipDe() { EquipWeapon("De"); }
+
+    void EquipWeapon(string name)
+    {
+        Debug.Log("Equipé : " + name);
+        // ici tu mettras ta logique d'arme plus tard
+        menuPanel.SetActive(false); // ferme le menu après
+    }
+
     private bool isOpen = false;
 
     void Start()
