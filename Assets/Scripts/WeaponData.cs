@@ -11,5 +11,8 @@ public class WeaponData : ScriptableObject
     public float spreadAngle = 15f;
     public bool hasHoming = false;
     public float homingStrength = 2f;
-    public RuntimeAnimatorController weaponAnimator;
+
+    [Header("Animation de la balle")]
+    public RuntimeAnimatorController bulletAnimator; // <-- Mets ton animation de plume/dé/médaillon ICI
+    public Color bulletColor = Color.white;
 }

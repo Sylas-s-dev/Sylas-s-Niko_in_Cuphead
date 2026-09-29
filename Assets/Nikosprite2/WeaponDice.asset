@@ -13,11 +13,12 @@ MonoBehaviour:
   m_Name: WeaponDice
   m_EditorClassIdentifier: Assembly-CSharp::WeaponData
   weaponName: "D\xE9"
-  damageMultiplier: 1
-  projectileSpeed: 10
-  fireRate: 0.2
+  damageMultiplier: 0.6
+  projectileSpeed: 8
+  fireRate: 0.3
   projectileCount: 3
   spreadAngle: 20
   hasHoming: 0
   homingStrength: 2
-  weaponAnimator: {fileID: 0}
+  bulletAnimator: {fileID: 9100000, guid: 1319af888cd7abb46afb4868df1025ae, type: 2}
+  bulletColor: {r: 1, g: 1, b: 1, a: 1}

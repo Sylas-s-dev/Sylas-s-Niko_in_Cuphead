@@ -15,9 +15,10 @@ MonoBehaviour:
   weaponName: "M\xE9daillon"
   damageMultiplier: 1
   projectileSpeed: 6
-  fireRate: 0.2
+  fireRate: 0.5
   projectileCount: 1
   spreadAngle: 15
   hasHoming: 1
   homingStrength: 1.5
-  weaponAnimator: {fileID: 0}
+  bulletAnimator: {fileID: 9100000, guid: fa299ba6bda3ca24b8a2501e5836ec09, type: 2}
+  bulletColor: {r: 1, g: 1, b: 1, a: 1}

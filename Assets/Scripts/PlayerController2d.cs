@@ -56,10 +56,10 @@ public class PlayerController2D : MonoBehaviour
     [SerializeField] float runJumpThreshold = 3f;
 
     [Header("Armes - Nouveau Système")]
-    public WeaponData currentWeapon; // Glisse ta Plume ici par défaut
+    public WeaponData currentWeapon;
     public GameObject bulletPrefab;
-    public Transform firePoint; // fallback si pas de ScarfGun
-    public float fireRate = 0.2f; // sera écrasé par WeaponData si présent
+    public Transform firePoint;
+    public float fireRate = 0.2f;
 
     [Header("Scarf Gun")]
     public ScarfGunAim scarfGun;
@@ -97,19 +97,17 @@ public class PlayerController2D : MonoBehaviour
         slowMultiplier = 1f;
         currentHealth = maxHealth;
         if (sunBar != null) sunBar.InitBar();
-
+        if (currentWeapon == null)
+        {
+            currentWeapon = Resources.Load<WeaponData>("Plume"); // si tu as mis Plume dans Resources
+        }
         if (currentWeapon != null) fireRate = currentWeapon.fireRate;
     }
 
-    // APPELÉ PAR TON MENU OPTION
     public void EquipWeapon(WeaponData newWeapon)
     {
         currentWeapon = newWeapon;
         fireRate = newWeapon.fireRate;
-        if (newWeapon.weaponAnimator != null && animator != null)
-        {
-            animator.runtimeAnimatorController = newWeapon.weaponAnimator;
-        }
         Debug.Log("Arme équipée: " + newWeapon.weaponName);
     }
 
@@ -206,18 +204,15 @@ public class PlayerController2D : MonoBehaviour
         transform.position = pos;
     }
 
-    // --- TIR MODIFIÉ ---
     void Shoot()
     {
         Transform fp = null;
-        int dirIndex = 0;
         float baseAngle = 0f;
 
         if (scarfGun != null && scarfGun.currentFirePoint != null)
         {
             fp = scarfGun.currentFirePoint;
-            dirIndex = scarfGun.currentIndex;
-            baseAngle = dirIndex * 45f;
+            baseAngle = scarfGun.currentIndex * 45f;
             scarfGun.ShowScarf();
         }
         else if (firePoint != null)
@@ -227,7 +222,6 @@ public class PlayerController2D : MonoBehaviour
         }
         else return;
 
-        // Si pas d'arme assignée -> comportement de base (ta Plume)
         int count = currentWeapon != null ? currentWeapon.projectileCount : 1;
         float spread = currentWeapon != null ? currentWeapon.spreadAngle : 0f;
         float projSpeed = currentWeapon != null ? currentWeapon.projectileSpeed : 15f;
@@ -235,34 +229,25 @@ public class PlayerController2D : MonoBehaviour
         for (int i = 0; i < count; i++)
         {
             bool isRedDice = false;
-            float dmgMult = 1f;
-
-            if (currentWeapon != null)
+            float dmgMult = currentWeapon != null ? currentWeapon.damageMultiplier : 1f;
+            if (currentWeapon != null && currentWeapon.weaponName == "Dé" && Random.value < 0.05f)
             {
-                dmgMult = currentWeapon.damageMultiplier;
-                // Dé : 5% de chance rouge x2 dégats
-                if (currentWeapon.weaponName == "Dé" && Random.value < 0.05f)
-                {
-                    isRedDice = true;
-                    dmgMult *= 2f;
-                }
+                isRedDice = true;
+                dmgMult *= 2f;
             }
 
             float angleOffset = 0f;
-            if (count > 1)
-            {
-                angleOffset = -spread / 2f + (spread / (count - 1)) * i;
-            }
+            if (count > 1) angleOffset = -spread / 2f + (spread / (count - 1)) * i;
 
             Quaternion rot = Quaternion.Euler(0, 0, baseAngle + angleOffset);
             GameObject b = Instantiate(bulletPrefab, fp.position, rot);
 
-            // On essaye d'init ta balle si elle a le script Balle
-            var balleScript = b.GetComponent<Bullet>(); // ou Balle selon ton nom
+            var balleScript = b.GetComponent<Bullet>();
             if (balleScript != null)
             {
-                // Il faudra ajouter une méthode Init dans BalleP1
-                balleScript.Init(dmgMult, projSpeed, currentWeapon != null && currentWeapon.hasHoming, currentWeapon != null ? currentWeapon.homingStrength : 0f, isRedDice);
+                RuntimeAnimatorController animCtrl = currentWeapon != null ? currentWeapon.bulletAnimator : null;
+                Color col = currentWeapon != null ? currentWeapon.bulletColor : Color.white;
+                balleScript.Init(dmgMult, projSpeed, currentWeapon != null && currentWeapon.hasHoming, currentWeapon != null ? currentWeapon.homingStrength : 0f, isRedDice, animCtrl, col);
             }
             else
             {
@@ -276,7 +261,6 @@ public class PlayerController2D : MonoBehaviour
         }
     }
 
-    //... Le reste de ton code (Slow, Ghost, Dash, TakeDamage) reste identique...
     public void ApplySlow(float factor, float duration)
     {
         if (slowCoroutine != null) StopCoroutine(slowCoroutine);

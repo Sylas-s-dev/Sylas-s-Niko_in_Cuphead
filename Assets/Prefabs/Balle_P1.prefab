@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 5846032119180890642}
   - component: {fileID: -7654366003936211399}
   - component: {fileID: 6954886275399059984}
+  - component: {fileID: -3624130149898331152}
   m_Layer: 7
   m_Name: Balle_P1
   m_TagString: BossBullet
@@ -70,7 +71,7 @@ CircleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: 0, y: 0.0005455117}
   m_Radius: 0.1
 --- !u!50 &9670349842626975
 Rigidbody2D:
@@ -148,8 +149,8 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 2
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
-  m_Color: {r: 0.8301887, g: 0.41470003, b: 0, a: 1}
+  m_Sprite: {fileID: 5916503560728448396, guid: 5c94ecf70c5c9ca4995fe3eedf7c01b6, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -187,3 +188,25 @@ MonoBehaviour:
   speed: 6
   amplitude: 1.8
   frequency: 6
+--- !u!95 &-3624130149898331152
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4453465053408138200}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 72e364936f0ff8d4385b5ac703b8933d, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0

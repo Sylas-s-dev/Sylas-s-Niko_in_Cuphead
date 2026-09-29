@@ -15,9 +15,10 @@ MonoBehaviour:
   weaponName: Plume
   damageMultiplier: 1
   projectileSpeed: 12
-  fireRate: 0.2
+  fireRate: 0.3
   projectileCount: 1
   spreadAngle: 15
   hasHoming: 0
   homingStrength: 2
-  weaponAnimator: {fileID: 0}
+  bulletAnimator: {fileID: 9100000, guid: b9571a7d7ffc0114c9961f30f5482cda, type: 2}
+  bulletColor: {r: 1, g: 1, b: 1, a: 1}
