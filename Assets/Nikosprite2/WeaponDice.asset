@@ -16,7 +16,7 @@ MonoBehaviour:
   damageMultiplier: 0.6
   projectileSpeed: 8
   fireRate: 0.3
-  projectileCount: 3
+  projectileCount: 2
   spreadAngle: 20
   hasHoming: 0
   homingStrength: 2

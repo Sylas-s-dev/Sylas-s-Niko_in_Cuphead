@@ -353,14 +353,25 @@ public class Boss : MonoBehaviour
         }
         if (groundToCollapse != null)
         {
-            var col = groundToCollapse.GetComponent<Collider2D>(); if (col) col.enabled = false;
-            float fall = 0;
-            while (fall < 2f)
+            // On coupe les collisions pour que ça devienne du vide
+            foreach (var col in groundToCollapse.GetComponentsInChildren<Collider2D>())
+                col.enabled = false;
+
+            // On lance la chute sur les 6 sols
+            foreach (var anim in groundToCollapse.GetComponentsInChildren<Animator>())
             {
-                groundToCollapse.transform.position += Vector3.down * groundCollapseSpeed * Time.deltaTime;
-                fall += Time.deltaTime; yield return null;
+                anim.SetTrigger("Collapse");
             }
-            groundToCollapse.SetActive(false);
+
+            // On attend juste un peu pour que l'anim de descente se fasse
+            // mais on ne détruit plus rien après
+            yield return new WaitForSeconds(0.5f);
+            Vector3 target = groundToCollapse.transform.position + Vector3.down * 3.5f;
+            while (Vector3.Distance(groundToCollapse.transform.position, target) > 0.01f)
+            {
+                groundToCollapse.transform.position = Vector3.MoveTowards(groundToCollapse.transform.position, target, 1f * Time.deltaTime);
+                yield return null;
+            }
         }
         foreach (var plat in aerialPlatforms) if (plat != null) plat.SetActive(true);
         if (healthBar != null) healthBar.gameObject.SetActive(false);

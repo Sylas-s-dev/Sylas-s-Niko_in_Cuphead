@@ -240,6 +240,7 @@ GameObject:
   - component: {fileID: 190987760}
   - component: {fileID: 190987762}
   - component: {fileID: 190987761}
+  - component: {fileID: 190987763}
   m_Layer: 10
   m_Name: sol (1)
   m_TagString: Ground
@@ -367,6 +368,28 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!95 &190987763
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 190987759}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: f7ad5fff8fef8fa44a50ae00dad3b4b1, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &223822474
 GameObject:
   m_ObjectHideFlags: 0
@@ -972,6 +995,7 @@ GameObject:
   - component: {fileID: 488945446}
   - component: {fileID: 488945448}
   - component: {fileID: 488945447}
+  - component: {fileID: 488945449}
   m_Layer: 10
   m_Name: sol (2)
   m_TagString: Ground
@@ -1099,6 +1123,28 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!95 &488945449
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 488945445}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: f7ad5fff8fef8fa44a50ae00dad3b4b1, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &496972335
 GameObject:
   m_ObjectHideFlags: 0
@@ -1230,9 +1276,9 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0.1
+    x: 0.10000001
     y: 0
-    width: 0.8
+    width: 0.8000001
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
@@ -2145,7 +2191,7 @@ RectTransform:
   m_GameObject: {fileID: 786272947}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.7, y: 0.7, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 557817759}
@@ -2155,7 +2201,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 350, y: 125}
+  m_AnchoredPosition: {x: 250, y: 125}
   m_SizeDelta: {x: 50, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &786272949
@@ -3118,6 +3164,7 @@ GameObject:
   - component: {fileID: 1099845281}
   - component: {fileID: 1099845283}
   - component: {fileID: 1099845282}
+  - component: {fileID: 1099845284}
   m_Layer: 10
   m_Name: sol (3)
   m_TagString: Ground
@@ -3245,6 +3292,28 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!95 &1099845284
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1099845280}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: f7ad5fff8fef8fa44a50ae00dad3b4b1, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1111202084
 GameObject:
   m_ObjectHideFlags: 0
@@ -3392,7 +3461,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: -0.03784272, y: -0.026012361}
+  m_Offset: {x: -0.036962457, y: -0.08809441}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -3402,7 +3471,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 0.28223938, y: 0.7483469}
+  m_Size: {x: 0.22766285, y: 0.6260365}
   m_EdgeRadius: 0
 --- !u!50 &1111202088
 Rigidbody2D:
@@ -4702,6 +4771,7 @@ GameObject:
   - component: {fileID: 1726637810}
   - component: {fileID: 1726637812}
   - component: {fileID: 1726637811}
+  - component: {fileID: 1726637813}
   m_Layer: 10
   m_Name: sol (5)
   m_TagString: Ground
@@ -4829,6 +4899,28 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!95 &1726637813
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1726637809}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: f7ad5fff8fef8fa44a50ae00dad3b4b1, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1806569808
 GameObject:
   m_ObjectHideFlags: 0
@@ -5031,6 +5123,7 @@ GameObject:
   - component: {fileID: 1863699749}
   - component: {fileID: 1863699751}
   - component: {fileID: 1863699750}
+  - component: {fileID: 1863699752}
   m_Layer: 10
   m_Name: sol (4)
   m_TagString: Ground
@@ -5158,6 +5251,28 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!95 &1863699752
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1863699748}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: f7ad5fff8fef8fa44a50ae00dad3b4b1, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1871548536
 GameObject:
   m_ObjectHideFlags: 0
@@ -5306,6 +5421,7 @@ GameObject:
   - component: {fileID: 1912268385}
   - component: {fileID: 1912268384}
   - component: {fileID: 1912268386}
+  - component: {fileID: 1912268387}
   m_Layer: 10
   m_Name: sol
   m_TagString: Ground
@@ -5433,6 +5549,28 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 3.229371, y: 0.17648676}
   m_EdgeRadius: 0
+--- !u!95 &1912268387
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1912268383}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: f7ad5fff8fef8fa44a50ae00dad3b4b1, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1999881390
 GameObject:
   m_ObjectHideFlags: 0
