@@ -353,25 +353,32 @@ public class Boss : MonoBehaviour
         }
         if (groundToCollapse != null)
         {
-            // On coupe les collisions pour que ça devienne du vide
-            foreach (var col in groundToCollapse.GetComponentsInChildren<Collider2D>())
-                col.enabled = false;
-
-            // On lance la chute sur les 6 sols
             foreach (var anim in groundToCollapse.GetComponentsInChildren<Animator>())
-            {
                 anim.SetTrigger("Collapse");
-            }
 
-            // On attend juste un peu pour que l'anim de descente se fasse
-            // mais on ne détruit plus rien après
             yield return new WaitForSeconds(0.5f);
-            Vector3 target = groundToCollapse.transform.position + Vector3.down * 3.5f;
+            Vector3 target = groundToCollapse.transform.position + Vector3.down * 4f;
             while (Vector3.Distance(groundToCollapse.transform.position, target) > 0.01f)
             {
-                groundToCollapse.transform.position = Vector3.MoveTowards(groundToCollapse.transform.position, target, 1f * Time.deltaTime);
+                groundToCollapse.transform.position = Vector3.MoveTowards(groundToCollapse.transform.position, target, groundCollapseSpeed * Time.deltaTime);
                 yield return null;
             }
+
+            // On le rend corrompu MAIS on le laisse solide visuellement
+            foreach (var col in groundToCollapse.GetComponentsInChildren<Collider2D>())
+            {
+                col.enabled = true;
+                col.isTrigger = false; // IMPORTANT : reste solide pour que le joueur puisse atterrir dessus
+            }
+
+            // On s'assure qu'il a un Rigidbody pour la détection
+            var rb = groundToCollapse.GetComponent<Rigidbody2D>();
+            if (rb == null) rb = groundToCollapse.AddComponent<Rigidbody2D>();
+            rb.bodyType = RigidbodyType2D.Kinematic;
+
+            var voidScript = groundToCollapse.GetComponent<VoidPit>();
+            if (voidScript == null) voidScript = groundToCollapse.AddComponent<VoidPit>();
+            voidScript.player = player;
         }
         foreach (var plat in aerialPlatforms) if (plat != null) plat.SetActive(true);
         if (healthBar != null) healthBar.gameObject.SetActive(false);
