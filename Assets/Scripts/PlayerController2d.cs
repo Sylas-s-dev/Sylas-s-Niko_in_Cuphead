@@ -230,10 +230,10 @@ public class PlayerController2D : MonoBehaviour
         {
             bool isRedDice = false;
             float dmgMult = currentWeapon != null ? currentWeapon.damageMultiplier : 1f;
-            if (currentWeapon != null && currentWeapon.weaponName == "Dé" && Random.value < 0.05f)
+            if (currentWeapon != null && currentWeapon.weaponName == "Dé" && Random.value < 0.01f)
             {
                 isRedDice = true;
-                dmgMult *= 2f;
+                dmgMult *= 5f;
             }
 
             float angleOffset = 0f;
