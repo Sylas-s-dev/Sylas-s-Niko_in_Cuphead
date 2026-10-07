@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class Boss : MonoBehaviour
 {
@@ -404,5 +405,5 @@ public class Boss : MonoBehaviour
         StartCoroutine(SpecialLoopP3());
     }
 
-    void Die() { StopAllCoroutines(); Destroy(gameObject); }
+    void Die() { StopAllCoroutines(); Destroy(gameObject); GameManager.Instance.isComingFromDream = true; SceneManager.LoadScene("Fin"); }
 }
