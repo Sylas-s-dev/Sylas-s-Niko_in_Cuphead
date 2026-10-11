@@ -6,20 +6,27 @@ public class DreamIntroAuto : MonoBehaviour
 {
     public DialogueManager dm;
     public CanvasGroup blackScreen;
-    public Animator nikoSleepAnimator; // Animator de Niko couché avec 2 states: EyesOpen / EyesClosing
+    public Animator nikoSleepAnimator;
+
+    [Header("Séquence Rêve")]
+    public GameObject dreamRoot; // Un parent avec tout ton décor de rêve (à désactiver au début)
+    public Animator dreamAnimator; // Animator avec une anim "DreamLoop" : yeux qui flottent, glitch, etc.
+    public float dreamDuration = 4f;
+    public AudioSource dreamAudio; // petit son onirique / basse
+
     public string bossSceneName = "BossDreamFight";
     public string playerName = "Player";
 
     void Start()
     {
-        // s'assure qu'on commence dans le noir puis on s'éclaircit sur Niko au lit
         blackScreen.alpha = 1f;
+        if (dreamRoot) dreamRoot.SetActive(false);
         StartCoroutine(Sequence());
     }
 
     IEnumerator Sequence()
-    {      
-        // 1. Fondu d'ouverture sur Niko déjà au lit, yeux ouverts
+    {
+        // 1. Fondu d'ouverture
         float t = 1f;
         while (t > 0)
         {
@@ -30,30 +37,56 @@ public class DreamIntroAuto : MonoBehaviour
 
         yield return new WaitForSeconds(0.5f);
 
-        // 2. Dialogue vers le joueur - 4e mur
+        // 2. Dialogue 4e mur
         yield return dm.TypeDialogue($"Niko : {playerName}... t'es encore là ?");
+        yield return dm.TypeDialogue($"Niko : [...]");
         yield return dm.TypeDialogue($"Niko : J'arrive plus à garder les yeux ouverts...");
-        yield return dm.TypeDialogue($"Niko : Bonne nuit. A tout à l'heure dans mon rêve...");
+        yield return dm.TypeDialogue($"Niko : Bonne nuit. A plus tard...");
 
-        // 3. Il s'endort - anim yeux qui se ferment
+        // 3. Il s'endort
         nikoSleepAnimator.SetTrigger("FallAsleep");
         yield return new WaitForSeconds(1.2f);
 
-        // 4. Fondu au noir + effet rêve
+        // 4. Fondu au noir
         t = 0f;
         while (t < 1)
         {
-            t += Time.deltaTime * 0.4f; // plus lent = plus onirique
+            t += Time.deltaTime * 0.4f;
             blackScreen.alpha = t;
-            // optionnel: petit scale sur la cam pour effet vertige
             Camera.main.orthographicSize = Mathf.Lerp(5f, 5.5f, t);
             yield return null;
         }
 
         yield return dm.TypeDialogue($"* ... *");
-        yield return new WaitForSeconds(0.5f);
 
-        // 5. Lancement de ton fight
+        // --- 4.5 NOUVELLE SÉQUENCE RÊVE ---
+        // On est dans le noir total, on lance le rêve
+        if (dreamRoot) dreamRoot.SetActive(true);
+        if (dreamAudio) dreamAudio.Play();
+        if (dreamAnimator) dreamAnimator.SetTrigger("StartDream");
+
+        // On ré-ouvre légèrement les yeux DANS le rêve
+        t = 1f;
+        while (t > 0.3f) // on ne revient pas à 0, on reste dans un noir laiteux
+        {
+            t -= Time.deltaTime * 0.5f;
+            blackScreen.alpha = t;
+            yield return null;
+        }
+
+        yield return new WaitForSeconds(dreamDuration); // c'est ton animation qui tourne
+
+        // Fin du rêve - on replonge au noir brutal
+        if (dreamAnimator) dreamAnimator.SetTrigger("EndDream");
+        t = 0.3f;
+        while (t < 1)
+        {
+            t += Time.deltaTime * 0.8f; // plus rapide = réveil brutal
+            blackScreen.alpha = t;
+            yield return null;
+        }
+
+        // 5. Lancement du bossfight
         GameManager.Instance.isComingFromDream = false;
         SceneManager.LoadScene(bossSceneName);
     }
