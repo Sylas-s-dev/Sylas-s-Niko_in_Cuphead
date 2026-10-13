@@ -589,7 +589,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0.063058615, y: 0.013046667}
+  m_Offset: {x: 0.063058615, y: 0.024244457}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -599,7 +599,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 0.72602046, y: 0.8347423}
+  m_Size: {x: 0.72602046, y: 0.7419608}
   m_EdgeRadius: 0
 --- !u!50 &252761435
 Rigidbody2D:
@@ -640,8 +640,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6d65f575546ab2d49b0d57abcabc202c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Boss
-  maxHealth: 50
-  maxHealthPhase3: 30
+  maxHealth: 450
+  maxHealthPhase3: 300
   secondBarActive: 0
   healthBar: {fileID: 0}
   healthBarPhase3: {fileID: 0}
@@ -1618,10 +1618,10 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0.15885417
-    y: 0
-    width: 0.31250003
-    height: 0.27777776
+    x: 0
+    y: 0.055555556
+    width: 1
+    height: 0.8888889
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 34

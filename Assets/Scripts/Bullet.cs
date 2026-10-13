@@ -3,10 +3,10 @@ using UnityEngine;
 public class Bullet : MonoBehaviour
 {
     [Header("Base")]
-    public int baseDamage = 1;
-    public int damage = 1;
+    public int baseDamage = 4;
+    public int damage = 4;
     public float speed = 15f;
-    public float lifeTime = 3f;
+    public float lifeTime = 4f;
 
     [Header("Médaillon - Homing")]
     public bool hasHoming = false;
