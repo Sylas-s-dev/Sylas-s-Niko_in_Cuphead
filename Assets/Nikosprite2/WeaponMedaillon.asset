@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WeaponData
   weaponName: "M\xE9daillon"
   damageMultiplier: 1.2
-  projectileSpeed: 8
+  projectileSpeed: 5
   fireRate: 0.6
   projectileCount: 1
   spreadAngle: 15

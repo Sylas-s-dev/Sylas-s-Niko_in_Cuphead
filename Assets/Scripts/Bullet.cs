@@ -3,8 +3,8 @@ using UnityEngine;
 public class Bullet : MonoBehaviour
 {
     [Header("Base")]
-    public int baseDamage = 4;
-    public int damage = 4;
+    public int baseDamage = 5;
+    public int damage = 5;
     public float speed = 15f;
     public float lifeTime = 4f;
 
