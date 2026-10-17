@@ -405,5 +405,5 @@ public class Boss : MonoBehaviour
         StartCoroutine(SpecialLoopP3());
     }
 
-    void Die() { StopAllCoroutines(); Destroy(gameObject); GameManager.Instance.isComingFromDream = true; SceneManager.LoadScene("Fin"); }
+    void Die() { StopAllCoroutines(); Destroy(gameObject); GameManager.Instance.isComingFromDream = true; SceneManager.LoadScene("Ending"); }
 }

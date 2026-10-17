@@ -15,7 +15,7 @@ public class DreamIntroAuto : MonoBehaviour
     public AudioSource dreamAudio; // petit son onirique / basse
 
     public string bossSceneName = "BossDreamFight";
-    public string playerName = "Player";
+    public string playerName = "Dieu";
 
     void Start()
     {
