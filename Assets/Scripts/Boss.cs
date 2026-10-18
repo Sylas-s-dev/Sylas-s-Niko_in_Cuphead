@@ -6,6 +6,13 @@ using UnityEngine.SceneManagement;
 
 public class Boss : MonoBehaviour
 {
+    [Header("Activation Tuto")]
+    public bool bossActive = false; // reste false tant que le tuto n'est pas fini
+    [Tooltip("Si tu n'as pas de tuto dans une scène de test, il s'activera tout seul")]
+    public bool autoActivateIfNoTuto = true;
+    [Header("Spawn")]
+    public float spawnAppearDelay = 2.5f;
+
     [Header("Vie Phase 1 & 2")] public int maxHealth = 20; private int currentHealth; private int phase = 1;
     [Header("Vie Phase 3")] public int maxHealthPhase3 = 30; private int currentHealthPhase3; public bool secondBarActive = false;
     [Header("UI")] public Slider healthBar; public Slider healthBarPhase3; public GameObject healthBarPhase3_GO;
@@ -31,11 +38,77 @@ public class Boss : MonoBehaviour
     [Range(0.1f, 1f)] public float slowFactor = 0.4f;
     public float moveThreshold = 0.2f;
 
+    [Header("Feedback Hit - Cuphead")]
+    public float hitFlashDuration = 0.08f;
+    private SpriteRenderer srBoss;
+    private Color originalColor;
+    private Coroutine flashCoroutine;
+
     void Start()
+{
+    srBoss = GetComponent<SpriteRenderer>();
+    if (srBoss != null) originalColor = srBoss.color;
+    
+    currentHealth = maxHealth;
+    if (healthBar != null) { healthBar.maxValue = maxHealth; healthBar.value = currentHealth; }
+    if (freezeTimerUI != null) freezeTimerUI.SetActive(false);
+
+    // CACHE LE BOSS PENDANT LE TUTO
+    if (!bossActive)
     {
-        currentHealth = maxHealth;
-        if (healthBar != null) { healthBar.maxValue = maxHealth; healthBar.value = currentHealth; }
-        if (freezeTimerUI != null) freezeTimerUI.SetActive(false);
+        HideBoss();
+        // Si pas d'orbe dans la scène (mode test), on l'affiche direct
+        if (autoActivateIfNoTuto && FindFirstObjectByType<BossActivatorOrb>() == null)
+        {
+            ActivateBoss();
+        }
+    }
+    else
+    {
+        ActivateBoss();
+    }
+}
+
+void HideBoss()
+{
+    if (srBoss != null) srBoss.enabled = false;
+    if (bossContactCollider != null) bossContactCollider.enabled = false;
+    if (animator != null) animator.enabled = false;
+    foreach (var col in GetComponentsInChildren<Collider2D>()) col.enabled = false;
+    if (healthBar != null) healthBar.gameObject.SetActive(false);
+    if (healthBarPhase3_GO != null) healthBarPhase3_GO.SetActive(false);
+}
+
+void ShowBoss()
+{
+    if (srBoss != null) srBoss.enabled = true;
+    if (bossContactCollider != null) bossContactCollider.enabled = true;
+    if (animator != null) animator.enabled = true;
+    foreach (var col in GetComponentsInChildren<Collider2D>()) col.enabled = true;
+    if (healthBar != null) healthBar.gameObject.SetActive(true);
+}
+
+    public void ActivateBoss()
+    {
+        if (bossActive && srBoss != null && srBoss.enabled) return;
+        bossActive = true;
+        StartCoroutine(SpawnSequence());
+    }
+    IEnumerator SpawnSequence()
+    {
+        ShowBoss();
+
+        if (animator != null)
+        {
+            animator.SetTrigger("Spawn");
+            animator.SetBool("CanAttack", false);
+        }
+
+        // JUSTE LE DELAI ICI - il est visible mais ne tire pas
+        yield return new WaitForSeconds(spawnAppearDelay);
+
+        if (animator != null) animator.SetBool("CanAttack", true);
+
         StartCoroutine(BulletLoop());
         StartCoroutine(SpecialLoopP1P2());
     }
@@ -53,6 +126,7 @@ public class Boss : MonoBehaviour
     {
         while (true)
         {
+            if (!bossActive) { yield return null; continue; }
             if (phase3Paused) { yield return null; continue; }
             if (!secondBarActive)
             {
@@ -135,6 +209,7 @@ public class Boss : MonoBehaviour
     {
         while (!secondBarActive)
         {
+            if (!bossActive) { yield return null; continue; }
             if (phase3Paused) { yield return null; continue; }
             if (phase == 1)
             {
@@ -227,6 +302,20 @@ public class Boss : MonoBehaviour
         sr.color = baseC;
     }
 
+    // === FLASH CUPHEAD ===
+    IEnumerator HitFlash()
+    {
+        if (srBoss == null) yield break;
+        srBoss.color = Color.white;
+        yield return new WaitForSeconds(hitFlashDuration);
+        // si on est en phase 2, on revient en rouge, sinon couleur originale
+        if (phase == 2) srBoss.color = Color.red;
+        else srBoss.color = originalColor;
+        yield return new WaitForSeconds(hitFlashDuration * 0.5f);
+        if (srBoss != null && srBoss.color == Color.white)
+            srBoss.color = (phase == 2 ? Color.red : originalColor);
+    }
+
     IEnumerator HomingOrbAttack()
     {
         specialIsActive = true;
@@ -293,6 +382,11 @@ public class Boss : MonoBehaviour
     public void TakeDamage(int dmg)
     {
         if (isInvulnerable) return;
+        if (!bossActive) return; // invulnérable pendant le tuto
+
+        // FLASH CUPHEAD
+        if (flashCoroutine != null) StopCoroutine(flashCoroutine);
+        flashCoroutine = StartCoroutine(HitFlash());
 
         if (!secondBarActive)
         {
@@ -303,7 +397,8 @@ public class Boss : MonoBehaviour
             {
                 phase = 2;
                 fireRate = 0.4f;
-                GetComponent<SpriteRenderer>().color = Color.red;
+                originalColor = Color.red; // on met à jour la couleur de base
+                if (srBoss != null) srBoss.color = Color.red;
             }
 
             if (currentHealth <= 0)
@@ -326,11 +421,11 @@ public class Boss : MonoBehaviour
         foreach (var d in FindObjectsOfType<SimpleDamage>()) Destroy(d.gameObject);
         foreach (var b in FindObjectsOfType<Boulder>()) Destroy(b.gameObject);
         foreach (var o in FindObjectsOfType<HomingOrb>()) Destroy(o.gameObject);
-        var srBoss = GetComponent<SpriteRenderer>();
-        if (srBoss != null)
+        var srBossLocal = GetComponent<SpriteRenderer>();
+        if (srBossLocal != null)
         {
-            Color baseColor = srBoss.color; srBoss.color = Color.white; Time.timeScale = 0f;
-            yield return new WaitForSecondsRealtime(0.15f); Time.timeScale = 1f; srBoss.color = baseColor;
+            Color baseColor = srBossLocal.color; srBossLocal.color = Color.white; Time.timeScale = 0f;
+            yield return new WaitForSecondsRealtime(0.15f); Time.timeScale = 1f; srBossLocal.color = baseColor;
         }
         else yield return new WaitForSeconds(0.15f);
         if (platformPurplePrefab != null && centerPosition != null)
@@ -365,14 +460,12 @@ public class Boss : MonoBehaviour
                 yield return null;
             }
 
-            // On le rend corrompu MAIS on le laisse solide visuellement
             foreach (var col in groundToCollapse.GetComponentsInChildren<Collider2D>())
             {
                 col.enabled = true;
-                col.isTrigger = false; // IMPORTANT : reste solide pour que le joueur puisse atterrir dessus
+                col.isTrigger = false;
             }
 
-            // On s'assure qu'il a un Rigidbody pour la détection
             var rb = groundToCollapse.GetComponent<Rigidbody2D>();
             if (rb == null) rb = groundToCollapse.AddComponent<Rigidbody2D>();
             rb.bodyType = RigidbodyType2D.Kinematic;
