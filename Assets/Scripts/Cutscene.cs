@@ -38,10 +38,10 @@ public class DreamIntroAuto : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
 
         // 2. Dialogue 4e mur
-        yield return dm.TypeDialogue($"Niko : {playerName}... t'es encore là ?");
-        yield return dm.TypeDialogue($"Niko : [...]");
-        yield return dm.TypeDialogue($"Niko : J'arrive plus à garder les yeux ouverts...");
-        yield return dm.TypeDialogue($"Niko : Bonne nuit. A plus tard...");
+        yield return dm.TypeDialogue($"{playerName}... t'es encore là ?");
+        yield return dm.TypeDialogue($"[...]");
+        yield return dm.TypeDialogue($"J'arrive plus à garder les yeux ouverts...");
+        yield return dm.TypeDialogue($"Bonne nuit. A plus tard...");
 
         // 3. Il s'endort
         nikoSleepAnimator.SetTrigger("FallAsleep");

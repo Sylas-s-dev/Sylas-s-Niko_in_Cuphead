@@ -80,6 +80,7 @@ public class PlayerController2D : MonoBehaviour
     [Header("Dash Collision")]
     public LayerMask groundLayer;
     LayerMask savedExclude;
+    public static GameOverManager Instance;
 
     void Awake()
     {
@@ -331,7 +332,7 @@ public class PlayerController2D : MonoBehaviour
     {
         if (IsInvincible) return; currentHealth -= damage;
         if (sunBar != null) sunBar.UpdateHealth(currentHealth);
-        if (currentHealth <= 0) SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        if (currentHealth <= 0) GameOverManager.Instance.TriggerGameOver();
         else { if (invincibilityCoroutine != null) StopCoroutine(invincibilityCoroutine); invincibilityCoroutine = StartCoroutine(HitInvincibility()); }
     }
     IEnumerator HitInvincibility()

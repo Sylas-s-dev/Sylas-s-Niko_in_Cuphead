@@ -27,12 +27,12 @@ public class EndingManager : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
 
         // 2. Dialogue 4e mur
-        yield return dm.TypeDialogue($"Niko : Dieu... Qu'est-ce que...");
-        yield return dm.TypeDialogue($"Niko : [...]");
-        yield return dm.TypeDialogue($"Niko : Alors ce n'était qu'un rêve?");
-        yield return dm.TypeDialogue($"Niko : Dieu, tu es là?");
-        yield return dm.TypeDialogue($"Niko : [...]");
-        yield return dm.TypeDialogue($"Niko : J'ai un mauvais pressentiment pour la suite...");
+        yield return dm.TypeDialogue($"Dieu... Qu'est-ce que...");
+        yield return dm.TypeDialogue($"[...]");
+        yield return dm.TypeDialogue($"Alors ce n'était qu'un rêve?");
+        yield return dm.TypeDialogue($"Dieu, tu es là?");
+        yield return dm.TypeDialogue($"[...]");
+        yield return dm.TypeDialogue($"J'ai un mauvais pressentiment pour la suite...");
 
         // 3. Fondu au noir
         t = 0f;
