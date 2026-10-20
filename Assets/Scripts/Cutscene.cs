@@ -74,7 +74,7 @@ public class DreamIntroAuto : MonoBehaviour
 
         // On ré-ouvre légèrement les yeux DANS le rêve
         t = 1f;
-        while (t > 0.3f) // on ne revient pas à 0, on reste dans un noir laiteux
+        while (t > 0f) // on ne revient pas à 0, on reste dans un noir laiteux
         {
             t -= Time.deltaTime * 0.5f;
             blackScreen.alpha = t;
