@@ -6,8 +6,9 @@ using UnityEngine.SceneManagement;
 
 public class Boss : MonoBehaviour
 {
+    public static bool IsBossDead = false;
     [Header("Activation Tuto")]
-    public bool bossActive = false; // reste false tant que le tuto n'est pas fini
+    public bool bossActive = false;
     [Tooltip("Si tu n'as pas de tuto dans une scène de test, il s'activera tout seul")]
     public bool autoActivateIfNoTuto = true;
     [Header("Spawn")]
@@ -38,55 +39,63 @@ public class Boss : MonoBehaviour
     [Range(0.1f, 1f)] public float slowFactor = 0.4f;
     public float moveThreshold = 0.2f;
 
-    [Header("Feedback Hit - Cuphead")]
+    [Header("Feedback Hit")]
     public float hitFlashDuration = 0.08f;
     private SpriteRenderer srBoss;
-    private Color originalColor;
     private Coroutine flashCoroutine;
+    [SerializeField] private SpriteRenderer bossSprite;
+    private Color originalColor;
+    private Material mat;
+
+    void Awake()
+    {
+        srBoss = GetComponent<SpriteRenderer>();
+        if (bossSprite == null) bossSprite = srBoss;
+        if (bossSprite != null) mat = bossSprite.material;
+    }
 
     void Start()
-{
-    srBoss = GetComponent<SpriteRenderer>();
-    if (srBoss != null) originalColor = srBoss.color;
-    
-    currentHealth = maxHealth;
-    if (healthBar != null) { healthBar.maxValue = maxHealth; healthBar.value = currentHealth; }
-    if (freezeTimerUI != null) freezeTimerUI.SetActive(false);
-
-    // CACHE LE BOSS PENDANT LE TUTO
-    if (!bossActive)
     {
-        HideBoss();
-        // Si pas d'orbe dans la scène (mode test), on l'affiche direct
-        if (autoActivateIfNoTuto && FindFirstObjectByType<BossActivatorOrb>() == null)
+        IsBossDead = false;
+        if (srBoss != null) originalColor = srBoss.color;
+        if (bossSprite != null) originalColor = bossSprite.color;
+
+        currentHealth = maxHealth;
+        if (healthBar != null) { healthBar.maxValue = maxHealth; healthBar.value = currentHealth; }
+        if (freezeTimerUI != null) freezeTimerUI.SetActive(false);
+
+        if (!bossActive)
+        {
+            HideBoss();
+            if (autoActivateIfNoTuto && FindFirstObjectByType<BossActivatorOrb>() == null)
+            {
+                ActivateBoss();
+            }
+        }
+        else
         {
             ActivateBoss();
         }
     }
-    else
+
+    void HideBoss()
     {
-        ActivateBoss();
+        if (srBoss != null) srBoss.enabled = false;
+        if (bossContactCollider != null) bossContactCollider.enabled = false;
+        if (animator != null) animator.enabled = false;
+        foreach (var col in GetComponentsInChildren<Collider2D>()) col.enabled = false;
+        if (healthBar != null) healthBar.gameObject.SetActive(false);
+        if (healthBarPhase3_GO != null) healthBarPhase3_GO.SetActive(false);
     }
-}
 
-void HideBoss()
-{
-    if (srBoss != null) srBoss.enabled = false;
-    if (bossContactCollider != null) bossContactCollider.enabled = false;
-    if (animator != null) animator.enabled = false;
-    foreach (var col in GetComponentsInChildren<Collider2D>()) col.enabled = false;
-    if (healthBar != null) healthBar.gameObject.SetActive(false);
-    if (healthBarPhase3_GO != null) healthBarPhase3_GO.SetActive(false);
-}
-
-void ShowBoss()
-{
-    if (srBoss != null) srBoss.enabled = true;
-    if (bossContactCollider != null) bossContactCollider.enabled = true;
-    if (animator != null) animator.enabled = true;
-    foreach (var col in GetComponentsInChildren<Collider2D>()) col.enabled = true;
-    if (healthBar != null) healthBar.gameObject.SetActive(true);
-}
+    void ShowBoss()
+    {
+        if (srBoss != null) srBoss.enabled = true;
+        if (bossContactCollider != null) bossContactCollider.enabled = true;
+        if (animator != null) animator.enabled = true;
+        foreach (var col in GetComponentsInChildren<Collider2D>()) col.enabled = true;
+        if (healthBar != null) healthBar.gameObject.SetActive(true);
+    }
 
     public void ActivateBoss()
     {
@@ -94,21 +103,17 @@ void ShowBoss()
         bossActive = true;
         StartCoroutine(SpawnSequence());
     }
+
     IEnumerator SpawnSequence()
     {
         ShowBoss();
-
         if (animator != null)
         {
             animator.SetTrigger("Spawn");
             animator.SetBool("CanAttack", false);
         }
-
-        // JUSTE LE DELAI ICI - il est visible mais ne tire pas
         yield return new WaitForSeconds(spawnAppearDelay);
-
         if (animator != null) animator.SetBool("CanAttack", true);
-
         StartCoroutine(BulletLoop());
         StartCoroutine(SpecialLoopP1P2());
     }
@@ -260,12 +265,10 @@ void ShowBoss()
             freezeTimerText.text = "!";
             freezeTimerText.fontSize = 150f;
         }
-
         float stopCheck = 0;
         bool hasMoved = false;
         Rigidbody2D playerRb = player != null ? player.GetComponent<Rigidbody2D>() : null;
         var playerCtrl = player != null ? player.GetComponent<PlayerController2D>() : null;
-
         while (stopCheck < mustStopDuration)
         {
             float vel = 0;
@@ -275,20 +278,20 @@ void ShowBoss()
             stopCheck += Time.deltaTime;
             yield return null;
         }
-
         if (freezeTimerUI != null) freezeTimerUI.SetActive(false);
         if (freezeTimerText != null) freezeTimerText.color = Color.white;
-
         if (hasMoved && playerCtrl != null)
         {
             playerCtrl.ApplySlow(slowFactor, slowDuration);
+            var sr = player.GetComponentInChildren<SpriteRenderer>();
+            if (sr != null) StartCoroutine(FlashColor(sr, new Color(0.7f, 0.2f, 1f), slowDuration));
         }
         else
         {
             if (player != null)
             {
                 var sr = player.GetComponentInChildren<SpriteRenderer>();
-                if (sr != null) StartCoroutine(FlashColor(sr, Color.green, 0.1f));
+                if (sr != null) StartCoroutine(FlashColor(sr, Color.white, 0.15f));
             }
         }
         specialIsActive = false;
@@ -300,20 +303,6 @@ void ShowBoss()
         sr.color = c;
         yield return new WaitForSeconds(dur);
         sr.color = baseC;
-    }
-
-    // === FLASH CUPHEAD ===
-    IEnumerator HitFlash()
-    {
-        if (srBoss == null) yield break;
-        srBoss.color = Color.white;
-        yield return new WaitForSeconds(hitFlashDuration);
-        // si on est en phase 2, on revient en rouge, sinon couleur originale
-        if (phase == 2) srBoss.color = Color.red;
-        else srBoss.color = originalColor;
-        yield return new WaitForSeconds(hitFlashDuration * 0.5f);
-        if (srBoss != null && srBoss.color == Color.white)
-            srBoss.color = (phase == 2 ? Color.red : originalColor);
     }
 
     IEnumerator HomingOrbAttack()
@@ -369,6 +358,7 @@ void ShowBoss()
         yield return new WaitForSeconds(1.5f);
         specialIsActive = false;
     }
+
     IEnumerator ForceVelocityPermanent(GameObject b, Vector2 vel)
     {
         while (b != null)
@@ -379,12 +369,12 @@ void ShowBoss()
         }
     }
 
+    // --- DEGATS CORRIGES ---
     public void TakeDamage(int dmg)
     {
         if (isInvulnerable) return;
-        if (!bossActive) return; // invulnérable pendant le tuto
+        if (!bossActive) return;
 
-        // FLASH CUPHEAD
         if (flashCoroutine != null) StopCoroutine(flashCoroutine);
         flashCoroutine = StartCoroutine(HitFlash());
 
@@ -397,7 +387,7 @@ void ShowBoss()
             {
                 phase = 2;
                 fireRate = 0.4f;
-                originalColor = Color.red; // on met à jour la couleur de base
+                originalColor = Color.red;
                 if (srBoss != null) srBoss.color = Color.red;
             }
 
@@ -415,12 +405,40 @@ void ShowBoss()
         }
     }
 
+    IEnumerator HitFlash()
+    {
+        if (bossSprite == null) yield break;
+
+        // Flash couleur + luminosité
+        Color flashColor = Color.white;
+        bossSprite.color = flashColor;
+        if (mat != null)
+        {
+            // Essaie _Color et _BaseColor pour compatibilité
+            if (mat.HasProperty("_Color")) mat.SetColor("_Color", Color.white * 2.5f);
+            if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", Color.white * 2.5f);
+        }
+
+        yield return new WaitForSeconds(hitFlashDuration);
+
+        bossSprite.color = originalColor;
+        if (mat != null)
+        {
+            if (mat.HasProperty("_Color")) mat.SetColor("_Color", Color.white);
+            if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", Color.white);
+        }
+    }
+
     IEnumerator EnterPhase3()
     {
         secondBarActive = true; isInvulnerable = true; phase3Paused = true; specialIsActive = true; phase = 3;
         foreach (var d in FindObjectsOfType<SimpleDamage>()) Destroy(d.gameObject);
         foreach (var b in FindObjectsOfType<Boulder>()) Destroy(b.gameObject);
         foreach (var o in FindObjectsOfType<HomingOrb>()) Destroy(o.gameObject);
+        if (warningFlash != null) warningFlash.SetActive(false);
+        if (laserBeam != null) laserBeam.SetActive(false);
+        StopCoroutine("HorizontalLaserAttack");
+        StopCoroutine("LaserFollowPlayerAttack");
         var srBossLocal = GetComponent<SpriteRenderer>();
         if (srBossLocal != null)
         {
@@ -451,7 +469,6 @@ void ShowBoss()
         {
             foreach (var anim in groundToCollapse.GetComponentsInChildren<Animator>())
                 anim.SetTrigger("Collapse");
-
             yield return new WaitForSeconds(0.5f);
             Vector3 target = groundToCollapse.transform.position + Vector3.down * 4f;
             while (Vector3.Distance(groundToCollapse.transform.position, target) > 0.01f)
@@ -459,17 +476,14 @@ void ShowBoss()
                 groundToCollapse.transform.position = Vector3.MoveTowards(groundToCollapse.transform.position, target, groundCollapseSpeed * Time.deltaTime);
                 yield return null;
             }
-
             foreach (var col in groundToCollapse.GetComponentsInChildren<Collider2D>())
             {
                 col.enabled = true;
                 col.isTrigger = false;
             }
-
             var rb = groundToCollapse.GetComponent<Rigidbody2D>();
             if (rb == null) rb = groundToCollapse.AddComponent<Rigidbody2D>();
             rb.bodyType = RigidbodyType2D.Kinematic;
-
             var voidScript = groundToCollapse.GetComponent<VoidPit>();
             if (voidScript == null) voidScript = groundToCollapse.AddComponent<VoidPit>();
             voidScript.player = player;
@@ -498,5 +512,5 @@ void ShowBoss()
         StartCoroutine(SpecialLoopP3());
     }
 
-    void Die() { StopAllCoroutines(); Destroy(gameObject); GameManager.Instance.isComingFromDream = true; SceneManager.LoadScene("Ending"); }
+    void Die() { IsBossDead = true; StopAllCoroutines(); Destroy(gameObject); GameManager.Instance.isComingFromDream = true; SceneManager.LoadScene("Ending"); }
 }

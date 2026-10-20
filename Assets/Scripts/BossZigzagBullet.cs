@@ -3,8 +3,8 @@ using UnityEngine;
 public class BossZigzagBullet : MonoBehaviour
 {
     [Header("Zigzag")]
-    public float speed = 6f;
-    public float amplitude = 1.4f; // hauteur du zigzag
+    public float speed = 7f;
+    public float amplitude = 1.1f; // hauteur du zigzag
     public float frequency = 6f;   // vitesse du zigzag
 
     private Rigidbody2D rb;

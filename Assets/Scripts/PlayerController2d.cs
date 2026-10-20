@@ -37,7 +37,7 @@ public class PlayerController2D : MonoBehaviour
     public int ghostCount = 4;
 
     [Header("Coyote Time")]
-    public float coyoteTime = 0.15f;
+    public float coyoteTime = 0.1f;
     private float coyoteTimeCounter;
 
     [Header("Vie")]
@@ -230,7 +230,7 @@ public class PlayerController2D : MonoBehaviour
         for (int i = 0; i < count; i++)
         {
             bool isRedDice = false;
-            float dmgMult = currentWeapon != null ? currentWeapon.damageMultiplier : 1f;
+            float dmgMult = currentWeapon != null ? currentWeapon.damageMultiplier : 0.8f;
             if (currentWeapon != null && currentWeapon.weaponName == "Dé" && Random.value < 0.01f)
             {
                 isRedDice = true;
@@ -332,7 +332,7 @@ public class PlayerController2D : MonoBehaviour
     {
         if (IsInvincible) return; currentHealth -= damage;
         if (sunBar != null) sunBar.UpdateHealth(currentHealth);
-        if (currentHealth <= 0) GameOverManager.Instance.TriggerGameOver();
+        if (currentHealth <= 0) FindObjectOfType<GameOverManager>().TriggerGameOver();
         else { if (invincibilityCoroutine != null) StopCoroutine(invincibilityCoroutine); invincibilityCoroutine = StartCoroutine(HitInvincibility()); }
     }
     IEnumerator HitInvincibility()

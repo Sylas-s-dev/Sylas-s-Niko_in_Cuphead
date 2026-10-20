@@ -224,15 +224,15 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 1
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 2808380570386959645, guid: 7c18d9c9521191a4490d14faa98cb9f4, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 5c59b4ff739b4c64a898901e7e817933, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 19.21, y: 10.831787}
+  m_Size: {x: 19.2, y: 10.8}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 0
 --- !u!114 &168074990
 MonoBehaviour:
@@ -316,7 +316,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   isComingFromDream: 0
-  playerName: Dieu
+  playerName: God
 --- !u!4 &265188671
 Transform:
   m_ObjectHideFlags: 0
@@ -369,7 +369,7 @@ MonoBehaviour:
   dreamDuration: 45
   dreamAudio: {fileID: 0}
   bossSceneName: BossFight
-  playerName: Dieu
+  playerName: God
 --- !u!4 &312471551
 Transform:
   m_ObjectHideFlags: 0
@@ -745,7 +745,7 @@ Camera:
   far clip plane: 1000
   field of view: 34
   orthographic: 1
-  orthographic size: 6.25
+  orthographic size: 7
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2

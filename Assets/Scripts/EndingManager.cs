@@ -27,12 +27,12 @@ public class EndingManager : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
 
         // 2. Dialogue 4e mur
-        yield return dm.TypeDialogue($"Dieu... Qu'est-ce que...");
+        yield return dm.TypeDialogue($"God... What is...");
         yield return dm.TypeDialogue($"[...]");
-        yield return dm.TypeDialogue($"Alors ce n'était qu'un rêve?");
-        yield return dm.TypeDialogue($"Dieu, tu es là?");
+        yield return dm.TypeDialogue($"So it was just a dream?");
+        yield return dm.TypeDialogue($"God, are you there?");
         yield return dm.TypeDialogue($"[...]");
-        yield return dm.TypeDialogue($"J'ai un mauvais pressentiment pour la suite...");
+        yield return dm.TypeDialogue($"I have a bad feeling about what's next...");
 
         // 3. Fondu au noir
         t = 0f;
@@ -44,6 +44,6 @@ public class EndingManager : MonoBehaviour
             yield return null;
         }
 
-        yield return dm.TypeDialogue($"*Alors Niko continua son aventure, oubliant le rêve d'aujourd'hui...*");        
+        yield return dm.TypeDialogue($"*So Niko continued their adventure, forgetting today's dream...*");
     }
 }

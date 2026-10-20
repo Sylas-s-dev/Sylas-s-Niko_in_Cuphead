@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: WeaponMedaillon
   m_EditorClassIdentifier: Assembly-CSharp::WeaponData
   weaponName: "M\xE9daillon"
-  damageMultiplier: 1.2
-  projectileSpeed: 5
-  fireRate: 0.6
+  damageMultiplier: 1.5
+  projectileSpeed: 6
+  fireRate: 0.5
   projectileCount: 1
   spreadAngle: 15
   hasHoming: 1

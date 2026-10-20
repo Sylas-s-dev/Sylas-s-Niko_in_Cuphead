@@ -15,7 +15,7 @@ public class DreamIntroAuto : MonoBehaviour
     public AudioSource dreamAudio; // petit son onirique / basse
 
     public string bossSceneName = "BossDreamFight";
-    public string playerName = "Dieu";
+    public string playerName = "God";
 
     void Start()
     {
@@ -26,6 +26,13 @@ public class DreamIntroAuto : MonoBehaviour
 
     IEnumerator Sequence()
     {
+        
+        blackScreen.alpha = 1;
+        Camera.main.orthographicSize = Mathf.Lerp(5f, 5.5f, 1);
+        yield return null;
+        
+
+        yield return dm.TypeDialogue($"*The Refuge - Niko is resting on their bed in the room with the empty flowerpots.*");
         // 1. Fondu d'ouverture
         float t = 1f;
         while (t > 0)
@@ -38,10 +45,10 @@ public class DreamIntroAuto : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
 
         // 2. Dialogue 4e mur
-        yield return dm.TypeDialogue($"{playerName}... t'es encore là ?");
+        yield return dm.TypeDialogue($"{playerName}... you're still here?");
         yield return dm.TypeDialogue($"[...]");
-        yield return dm.TypeDialogue($"J'arrive plus à garder les yeux ouverts...");
-        yield return dm.TypeDialogue($"Bonne nuit. A plus tard...");
+        yield return dm.TypeDialogue($"I can't keep my eyes open anymore...");
+        yield return dm.TypeDialogue($"Good night. See you later...");
 
         // 3. Il s'endort
         nikoSleepAnimator.SetTrigger("FallAsleep");
